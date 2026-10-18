@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --ink:#1f2a27; --muted:#5d6b66; --paper:#faf7f1; --sand:#efe7d8; --line:#e2d8c6;
@@ -150,6 +151,14 @@
   .pay-info dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.92rem;margin-top:10px}
   .pay-info dt{color:var(--muted)} .pay-info dd{font-weight:600}
   @media (max-width:720px){ .pay-options{grid-template-columns:1fr 1fr} .lang{margin-left:0} }
+  .email-note{margin-top:14px;font-size:.9rem;color:var(--ok)}
+  @media print{
+    header,.page-head,.search,.steps,.notice,.policies,footer,#confirmSection .actions{display:none!important}
+    body{background:#fff}
+    main section{padding:0}
+    .confirm{border:0;box-shadow:none;max-width:none}
+    .confirm .tick{display:none}
+  }
 </style>
 </head>
 <body>
@@ -247,8 +256,10 @@
       <div class="ref" id="confirmRef"></div>
       <p id="confirmDetails"></p>
       <div class="pay-info" id="payInfo"></div>
+      <p class="email-note" id="emailNote" hidden></p>
       <div class="actions" style="justify-content:center">
         <a class="btn" href="index.html" data-i18n="backHome">Back to Home</a>
+        <button class="btn light" type="button" id="printConfBtn" data-i18n="printConf">Print / save as PDF</button>
         <button class="btn light" type="button" id="newBookingBtn" data-i18n="another">Make another booking</button>
       </div>
     </div>
@@ -295,6 +306,15 @@ const PAYMENT_INFO = {
   whatsapp: '+258 84 905 0766'
 };
 
+/* EMAIL NOTIFICATIONS (EmailJS) — see EMAIL-SETUP.md. Leave publicKey '' to switch emails off. */
+const EMAIL_SETTINGS = {
+  publicKey:  '',                 // EmailJS → Account → Public Key
+  serviceId:  '',                 // EmailJS → Email Services → Service ID (e.g. 'service_abc123')
+  templateId: '',                 // EmailJS → Email Templates → Template ID (e.g. 'template_xyz789')
+  hotelEmail: '',                 // where the hotel receives new-booking alerts
+  hotelLang:  'pt'                // language of the hotel's alert email: 'pt' or 'en'
+};
+
 /* ---------- Languages ---------- */
 const I18N = {
   en: {
@@ -330,7 +350,13 @@ const I18N = {
     errName:'Please enter your full name.', errEmail:'Please enter a valid email address.', errPhone:'Please enter a valid phone number.',
     errNet:'We could not reach the booking system. Please check your connection and try again.',
     errGeneric:'Something went wrong. Please try again, or contact the hotel directly.',
-    errGone:'Sorry, this room is no longer available for those dates.', errCap:'This room holds up to {n} guests.', errPay:'Please choose a payment method.'
+    errGone:'Sorry, this room is no longer available for those dates.', errCap:'This room holds up to {n} guests.', errPay:'Please choose a payment method.',
+    printConf:'Print / save as PDF', emailSent:'A copy of this confirmation has been sent to {email}.',
+    mailGuestSubj:'Your reservation at Hotel Ananga — {ref}', mailHello:'Dear {name},',
+    mailIntro:'Thank you for choosing Hotel Ananga. We have received your reservation. We will contact you shortly to confirm it.',
+    mailKeepRef:'Your booking reference', mailClosing:'We look forward to welcoming you.', mailSign:'Hotel Ananga',
+    mailHotelSubj:'New booking {ref} — {name}, {from}', mailHotelIntro:'A new reservation was made on the website. It is waiting for confirmation.',
+    mailGuest:'Guest', mailEmail:'Email', mailPhone:'Phone', mailRequests:'Requests', mailOpenAdmin:'Open the staff page'
   },
   pt: {
     navHome:'Início', navRooms:'Quartos', navContact:'Contacto', navBooking:'Quartos e Reservas', navStaff:'Equipa',
@@ -365,7 +391,13 @@ const I18N = {
     errName:'Introduza o seu nome completo.', errEmail:'Introduza um email válido.', errPhone:'Introduza um número de telefone válido.',
     errNet:'Não foi possível contactar o sistema de reservas. Verifique a ligação e tente novamente.',
     errGeneric:'Algo correu mal. Tente novamente ou contacte o hotel diretamente.',
-    errGone:'Lamentamos, este quarto já não está disponível nestas datas.', errCap:'Este quarto tem capacidade para {n} hóspedes.', errPay:'Escolha um método de pagamento.'
+    errGone:'Lamentamos, este quarto já não está disponível nestas datas.', errCap:'Este quarto tem capacidade para {n} hóspedes.', errPay:'Escolha um método de pagamento.',
+    printConf:'Imprimir / guardar PDF', emailSent:'Foi enviada uma cópia desta confirmação para {email}.',
+    mailGuestSubj:'A sua reserva no Hotel Ananga — {ref}', mailHello:'Caro(a) {name},',
+    mailIntro:'Obrigado por escolher o Hotel Ananga. Recebemos a sua reserva e entraremos em contacto em breve para a confirmar.',
+    mailKeepRef:'Referência da reserva', mailClosing:'Esperamos recebê-lo em breve.', mailSign:'Hotel Ananga',
+    mailHotelSubj:'Nova reserva {ref} — {name}, {from}', mailHotelIntro:'Foi feita uma nova reserva no site. Aguarda confirmação.',
+    mailGuest:'Hóspede', mailEmail:'Email', mailPhone:'Telefone', mailRequests:'Pedidos', mailOpenAdmin:'Abrir a página da equipa'
   }
 };
 const LANG_KEY = 'ananga-lang';
@@ -586,8 +618,10 @@ $('detailsForm').addEventListener('submit', async e => {
       result = { reference: 'DEMO-' + Math.random().toString(36).slice(2,8).toUpperCase(),
                  total_price: state.room.total_price, currency: state.room.currency, nights: state.nights };
     }
-    state.booking = { ...result, name, method, room: state.room, checkIn: state.checkIn, checkOut: state.checkOut };
+    state.booking = { ...result, name, email, phone, notes, method, guests: state.guests, lang,
+                      room: state.room, checkIn: state.checkIn, checkOut: state.checkOut, emailSent: false };
     renderConfirmation();
+    sendEmails(state.booking);
     $('detailsForm').reset();
     renderPayOptions();
     setStep(4);
@@ -609,27 +643,89 @@ function renderConfirmation(){
       nights: t('nightsN',{n:b.nights}), total: money(b.total_price, b.currency) }) + ' ' +
     (LIVE ? t('contactSoon') : t('demoSaved'));
 
-  const total = money(b.total_price, b.currency), P = PAYMENT_INFO;
-  let html = `<h3>${t('howToPay')} · ${t('pm_'+b.method)}</h3>`;
-  if (b.method === 'cash' || b.method === 'card') {
-    html += `<p>${esc(t('payAtDesk',{total}))}</p>`;
-  } else if (b.method === 'bank_transfer') {
-    html += `<p>${esc(t('payBank',{total, ref:b.reference}))}</p>
-      <dl><dt>${t('lblBank')}</dt><dd>${esc(P.bank.bank)}</dd>
-          <dt>${t('lblName')}</dt><dd>${esc(P.accountName)}</dd>
-          <dt>${t('lblAccount')}</dt><dd>${esc(P.bank.account)}</dd>
-          <dt>${t('lblNib')}</dt><dd>${esc(P.bank.nib)}</dd>
-          <dt>${t('lblRef')}</dt><dd>${esc(b.reference)}</dd>
-          <dt>${t('lblContact')}</dt><dd>${esc(P.whatsapp)}</dd></dl>`;
-  } else {
-    html += `<p>${esc(t('payMobile',{total, method:t('pm_'+b.method), ref:b.reference}))}</p>
-      <dl><dt>${t('lblNumber')}</dt><dd>${esc(P[b.method])}</dd>
-          <dt>${t('lblName')}</dt><dd>${esc(P.accountName)}</dd>
-          <dt>${t('lblRef')}</dt><dd>${esc(b.reference)}</dd>
-          <dt>${t('lblContact')}</dt><dd>${esc(P.whatsapp)}</dd></dl>`;
-  }
-  $('payInfo').innerHTML = html;
+  const pi = payInstructions(b);
+  $('payInfo').innerHTML = `<h3>${t('howToPay')} · ${t('pm_'+b.method)}</h3><p>${esc(pi.text)}</p>` +
+    (pi.rows.length ? `<dl>${pi.rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : '');
+  $('emailNote').hidden = !b.emailSent;
+  if (b.emailSent) $('emailNote').textContent = t('emailSent', {email: b.email});
 }
+
+/* Payment instructions for a booking, in the current language: { text, rows:[[label, value]] } */
+function payInstructions(b){
+  const total = money(b.total_price, b.currency), P = PAYMENT_INFO;
+  if (b.method === 'cash' || b.method === 'card') return { text: t('payAtDesk', {total}), rows: [] };
+  if (b.method === 'bank_transfer') return { text: t('payBank', {total, ref: b.reference}), rows: [
+    [t('lblBank'), P.bank.bank], [t('lblName'), P.accountName], [t('lblAccount'), P.bank.account],
+    [t('lblNib'), P.bank.nib], [t('lblRef'), b.reference], [t('lblContact'), P.whatsapp]] };
+  return { text: t('payMobile', {total, method: t('pm_'+b.method), ref: b.reference}), rows: [
+    [t('lblNumber'), P[b.method]], [t('lblName'), P.accountName], [t('lblRef'), b.reference], [t('lblContact'), P.whatsapp]] };
+}
+
+/* ---------- emails (EmailJS) ---------- */
+function withLang(l, fn){ const keep = lang; lang = l; try { return fn(); } finally { lang = keep; } }
+const mailRow = (k, v) => `<tr><td style="padding:6px 12px 6px 0;color:#5d6b66;vertical-align:top;white-space:nowrap">${esc(k)}</td><td style="padding:6px 0;font-weight:600;color:#1f2a27">${esc(v)}</td></tr>`;
+const mailWrap = inner => `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1f2a27;line-height:1.55">
+  <div style="background:#1e4d43;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0;font-size:20px;font-weight:bold">Hotel <span style="color:#e3c995">Ananga</span></div>
+  <div style="border:1px solid #e2d8c6;border-top:0;border-radius:0 0 10px 10px;padding:22px">${inner}</div></div>`;
+
+function stayRows(b){
+  return [[t('sumRoom'), roomName(b.room)], [t('sumIn'), niceDate(b.checkIn)], [t('sumOut'), niceDate(b.checkOut)],
+          [t('sumNights'), String(b.nights)], [t('sumGuests'), String(b.guests)],
+          [t('total'), money(b.total_price, b.currency)], [t('sumPay'), t('pm_'+b.method)]];
+}
+
+function guestMail(b){
+  const pi = payInstructions(b);
+  return {
+    subject: t('mailGuestSubj', {ref: b.reference}),
+    html: mailWrap(`
+      <p>${esc(t('mailHello', {name: b.name}))}</p>
+      <p>${esc(t('mailIntro'))}</p>
+      <p style="margin:18px 0 6px;color:#5d6b66;font-size:13px">${esc(t('mailKeepRef'))}</p>
+      <div style="display:inline-block;background:#efe7d8;padding:10px 16px;border-radius:8px;font:bold 20px monospace;letter-spacing:2px">${esc(b.reference)}</div>
+      <table style="margin:18px 0;border-collapse:collapse;font-size:14px">${stayRows(b).map(([k, v]) => mailRow(k, v)).join('')}</table>
+      <div style="background:#faf7f1;border:1px solid #e2d8c6;border-radius:8px;padding:14px 16px">
+        <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5d6b66;font-weight:bold;margin-bottom:6px">${esc(t('howToPay'))} · ${esc(t('pm_'+b.method))}</div>
+        <p style="margin:0 0 8px">${esc(pi.text)}</p>
+        ${pi.rows.length ? `<table style="border-collapse:collapse;font-size:14px">${pi.rows.map(([k, v]) => mailRow(k, v)).join('')}</table>` : ''}
+      </div>
+      <p style="margin-top:18px">${esc(t('mailClosing'))}<br><b>${esc(t('mailSign'))}</b><br>${esc(PAYMENT_INFO.whatsapp)}</p>`)
+  };
+}
+
+function hotelMail(b){
+  const admin = location.href.replace(/booking\.html.*$/, 'admin.html');
+  return {
+    subject: t('mailHotelSubj', {ref: b.reference, name: b.name, from: niceDate(b.checkIn)}),
+    html: mailWrap(`
+      <p>${esc(t('mailHotelIntro'))}</p>
+      <table style="margin:12px 0;border-collapse:collapse;font-size:14px">
+        ${mailRow(t('lblRef'), b.reference)}${mailRow(t('mailGuest'), b.name)}${mailRow(t('mailPhone'), b.phone)}${mailRow(t('mailEmail'), b.email)}
+        ${stayRows(b).map(([k, v]) => mailRow(k, v)).join('')}
+        ${b.notes ? mailRow(t('mailRequests'), b.notes) : ''}
+      </table>
+      ${/^https?:/.test(admin) ? `<p><a href="${esc(admin)}" style="display:inline-block;background:#1e4d43;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:bold">${esc(t('mailOpenAdmin'))}</a></p>` : ''}`)
+  };
+}
+
+async function sendEmails(b){
+  const E = EMAIL_SETTINGS;
+  if (!LIVE || !E.publicKey || !E.serviceId || !E.templateId || !window.emailjs) return;
+  try { window.emailjs.init({ publicKey: E.publicKey }); } catch(e) { console.warn('EmailJS init failed', e); return; }
+  const send = (to, mail, replyTo) => window.emailjs.send(E.serviceId, E.templateId, {
+    to_email: to, subject: mail.subject, message_html: mail.html, reply_to: replyTo || E.hotelEmail || to });
+  try {
+    await send(b.email, withLang(b.lang, () => guestMail(b)), E.hotelEmail);
+    b.emailSent = true;
+    if (state.booking === b) renderConfirmation();
+  } catch(e) { console.warn('Guest email not sent', e); }
+  if (E.hotelEmail) {
+    try { await send(E.hotelEmail, withLang(E.hotelLang || 'pt', () => hotelMail(b)), b.email); }
+    catch(e) { console.warn('Hotel email not sent', e); }
+  }
+}
+
+$('printConfBtn').addEventListener('click', () => window.print());
 
 $('newBookingBtn').addEventListener('click', () => {
   state.booking = null; state.room = null;

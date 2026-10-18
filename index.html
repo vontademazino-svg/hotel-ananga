@@ -7,6 +7,7 @@
 <meta name="description" content="Hotel Ananga: calm, comfortable rooms, warm service and easy online booking.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -187,7 +188,7 @@
       <p data-i18n="aboutP1">Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.</p>
       <p data-i18n="aboutP2">We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.</p>
       <div class="stats">
-        <div><strong>4</strong><span data-i18n="statRooms">Room types</span></div>
+        <div><strong id="roomCount">4</strong><span data-i18n="statRooms">Room types</span></div>
         <div><strong>24/7</strong><span data-i18n="statReception">Reception</span></div>
         <div><strong data-i18n="statOnline">Online</strong><span data-i18n="statBooking">Instant booking</span></div>
       </div>
@@ -228,7 +229,7 @@
       <h2 data-i18n="roomsTitle">Choose the room that suits your stay</h2>
       <p data-i18n="roomsText">All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.</p>
     </div>
-    <div class="rooms-list">
+    <div class="rooms-list" id="roomsList">
       <article class="room">
         <div class="media" data-label="graph/room-standard.jpg"><img src="graph/room-standard.jpg" alt="" onerror="this.remove()"></div>
         <div class="card-body"><h3 data-i18n="r1T">Standard Room</h3><div class="meta" data-i18n="r1M">Up to 2 guests · Queen bed</div><p data-i18n="r1">A calm, well-appointed room with a work desk and en-suite shower.</p><div class="price"><span data-i18n="from">from</span> MZN 3,500 <small data-i18n="perNight">/ night</small></div></div>
@@ -355,6 +356,7 @@ const I18N = {
     conEyebrow:'Contact & Location', conTitle:'We look forward to welcoming you',
     conAddress:'Address', conPhone:'Phone', conPayments:'Payments', conPaymentsV:'Cash, card, M-Pesa, e-Mola, mKesh, bank transfer',
     conIn:'Check-in', conInV:'From 14:00', conOut:'Check-out', conOutV:'Until 11:00',
+    upTo:'Up to {n} guests',
     ctaTitle:'Ready to plan your stay?', ctaText:'Check live availability and reserve your room in a few minutes.', ctaBtn:'Book Now'
   },
   pt: {
@@ -384,12 +386,46 @@ const I18N = {
     conEyebrow:'Contacto e Localização', conTitle:'Esperamos recebê-lo em breve',
     conAddress:'Morada', conPhone:'Telefone', conPayments:'Pagamentos', conPaymentsV:'Numerário, cartão, M-Pesa, e-Mola, mKesh, transferência bancária',
     conIn:'Check-in', conInV:'A partir das 14:00', conOut:'Check-out', conOutV:'Até às 11:00',
+    upTo:'Até {n} hóspedes',
     ctaTitle:'Pronto para planear a sua estadia?', ctaText:'Veja a disponibilidade em tempo real e reserve o seu quarto em poucos minutos.', ctaBtn:'Reservar agora'
   }
 };
+/* Same Supabase details as booking.html — the homepage reads room names and prices from the database */
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqa2RwenBubGxyZGxobmNjdGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTQ4OTgsImV4cCI6MjEwNzg5MDg5OH0.cifuHulxDpKQanyDBABAySZKfxoMVUJhObaGjAkD0cg';
+let liveRooms = null;
+
 const LANG_KEY = 'ananga-lang';
 let lang = (() => { try { return localStorage.getItem(LANG_KEY) } catch(e) { return null } })()
         || ((navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+
+const escH = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function renderLiveRooms(){
+  if (!liveRooms || !liveRooms.length) return;
+  const L = I18N[lang], loc = lang === 'pt' ? 'pt-PT' : 'en-GB';
+  document.getElementById('roomCount').textContent = liveRooms.length;
+  document.getElementById('roomsList').innerHTML = liveRooms.map(r => {
+    const name = lang === 'pt' ? (r.name_pt || r.name) : r.name;
+    const desc = lang === 'pt' ? (r.description_pt || r.description) : r.description;
+    const img = r.image_path ? `<img src="${escH(r.image_path)}" alt="" onerror="this.remove()">` : '';
+    return `<article class="room">
+      <div class="media" data-label="${escH(r.image_path || '')}">${img}</div>
+      <div class="card-body"><h3>${escH(name)}</h3><div class="meta">${L.upTo.replace('{n}', r.capacity)}</div><p>${escH(desc)}</p>
+        <div class="price">${L.from} ${escH(r.currency)} ${Number(r.price_per_night).toLocaleString(loc)} <small>${L.perNight}</small></div></div>
+    </article>`;
+  }).join('');
+}
+async function loadLiveRooms(){
+  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+  try {
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data, error } = await db.from('rooms')
+      .select('name,name_pt,description,description_pt,capacity,price_per_night,currency,image_path,sort_order')
+      .eq('active', true).order('sort_order');
+    if (error || !data || !data.length) return;   // keep the built-in room list
+    liveRooms = data; renderLiveRooms();
+  } catch(e) { /* keep the built-in room list */ }
+}
 
 function applyLang(){
   document.documentElement.lang = lang;
@@ -399,6 +435,7 @@ function applyLang(){
     box.innerHTML = ['en','pt'].map(l => `<button type="button" class="${l===lang?'on':''}" data-l="${l}" aria-label="${l==='en'?'English':'Português'}">${l.toUpperCase()}</button>`).join('');
     box.querySelectorAll('button').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem(LANG_KEY, lang) } catch(e) {} applyLang(); });
   });
+  renderLiveRooms();
 }
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -406,6 +443,7 @@ const btn = document.getElementById('menuBtn'), menu = document.getElementById('
 btn.addEventListener('click', () => btn.setAttribute('aria-expanded', menu.classList.toggle('open')));
 menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
 applyLang();
+loadLiveRooms();
 </script>
 </body>
 </html>

@@ -10,7 +10,7 @@ The site is treated as a real public website: welcoming, trustworthy and profess
 
 - **`index.html`**: Hotel introduction: about the hotel, facilities, room overview, hotel tour video, gallery, location and contact.
 - **`booking.html`**: Rooms and booking. Guests choose dates and number of guests, see live availability and prices, select a room, enter their details, choose how they will pay, and receive a booking reference with payment instructions.
-- **`admin.html`**: Staff page (not linked prominently; staff log in). Reception sees all bookings, confirms, cancels, checks guests in and out, and records payments and refunds.
+- **`admin.html`**: Staff page (linked as "Staff" in the footer; staff log in). Reception sees all bookings, confirms, cancels, checks guests in and out, records payments and refunds, and prints receipts. Managers can also edit rooms and prices.
 
 All pages link to each other, with no broken links. Each page has an **EN / PT** switch; the choice is remembered across pages. Visitors whose browser is set to Portuguese see Portuguese first.
 
@@ -23,9 +23,11 @@ All pages link to each other, with no broken links. Each page has an **EN / PT**
 ├── admin.html          ← staff page
 ├── graph/              ← all images and videos
 │   └── README.md       ← list of expected photo/video filenames
+├── EMAIL-SETUP.md      ← how to switch on booking emails (EmailJS)
 ├── supabase/
 │   ├── schema.sql                        ← database setup, part 1
-│   ├── update-2-payments-language.sql    ← database setup, part 2
+│   ├── update-2-complete.sql    ← database setup, part 2
+│   ├── update-3-rooms-editor.sql            ← database setup, part 3
 │   └── fix-create-booking.sql            ← old one-off fix (already included in the files above)
 └── README.md
 ```
@@ -55,6 +57,21 @@ No money is taken online. Guests choose how they **prefer** to pay, and staff re
 
 Staff record each payment (amount, method, transaction ID, notes) on the staff page. Part payments (deposits) and refunds are supported. The system blocks recording more than the booking total, or refunding more than was paid.
 
+## Staff roles
+
+| Role | Can do |
+|---|---|
+| `reception` | See bookings, confirm/cancel, check in/out, record payments and refunds, print receipts, view rooms |
+| `manager` | Everything reception can, plus add rooms and change names, descriptions, prices, number of rooms, and hide/show rooms |
+
+Price changes apply to new bookings only; existing bookings keep the price they were booked at. Rooms are never deleted (hide them instead) so past bookings stay intact. The homepage reads rooms and prices from the database, so changes show there immediately too.
+
+## Booking emails and receipts
+
+- **Emails:** after each booking, the guest gets a confirmation email (their language, with payment instructions) and the hotel gets a new-booking alert. Sent through EmailJS from the hotel's Gmail. Setup: see `EMAIL-SETUP.md`. Emails are optional; bookings work without them.
+- **Guest confirmation:** "Print / save as PDF" button on the confirmation page.
+- **Receipts:** "Print receipt" in each booking on the staff page prints a receipt (hotel details, guest, stay, payments received, balance) in the selected language. Hotel details for receipts are set in `HOTEL_INFO` in `admin.html`.
+
 ## Backend (Booking Database)
 
 Bookings are stored in **Supabase** (a hosted PostgreSQL database). The website stays a static site on GitHub Pages and talks to Supabase directly from the browser.
@@ -75,6 +92,9 @@ Bookings are stored in **Supabase** (a hosted PostgreSQL database). The website 
 | `staff_payments(reference)` | Staff | Payment history for one booking |
 | `record_payment(reference, amount, method, transaction_id, notes)` | Staff | Records a payment (negative amount = refund) |
 | `update_booking_status(reference, status)` | Staff | `pending` → `confirmed` → `checked_in` → `checked_out`, or `cancelled` |
+| `staff_me()` | Staff | Name and role of the signed-in staff member |
+| `staff_rooms()` | Staff | All rooms, including hidden ones |
+| `save_room(...)` | Managers | Add a room or change an existing one |
 
 **Tables**
 
@@ -96,7 +116,8 @@ Bookings are stored in **Supabase** (a hosted PostgreSQL database). The website 
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor → New query**, paste the contents of `supabase/schema.sql`, and click **Run**.
-3. Open another **New query**, paste `supabase/update-2-payments-language.sql`, and click **Run**.
+3. Open another **New query**, paste `supabase/update-2-complete.sql`, and click **Run**. Then do the same with `supabase/update-3-rooms-editor.sql`.
+   - Use the **SQL Editor** (the `>_` icon), not the Logs page.
    - If your database already existed before this update, run **only this file**. It is safe to run more than once.
 4. Check **Table Editor → rooms**: four rooms, each with a Portuguese name. Edit names, prices (MZN) and number of units to match the hotel.
 
@@ -121,7 +142,12 @@ Bookings are stored in **Supabase** (a hosted PostgreSQL database). The website 
    select id, 'Reception', 'reception' from auth.users where email = 'reception@example.com';
    ```
    The editor shows "Success. No rows returned" even when it worked. Check under **Table Editor → staff**.
-3. **Recommended:** in **Authentication → Sign In / Providers**, turn off **Allow new users to sign up**, so only accounts you create can exist.
+3. To make someone a **manager** (allowed to edit rooms and prices), run:
+   ```sql
+   update public.staff set role = 'manager'
+   where user_id = (select id from auth.users where email = 'manager@example.com');
+   ```
+4. **Recommended:** in **Authentication → Sign In / Providers**, turn off **Allow new users to sign up**, so only accounts you create can exist.
 
 ### 4. Publish on GitHub Pages
 
@@ -185,4 +211,16 @@ A record of every prompt given to the AI, with notes on why it was used and what
 
 **Prompt:** Yes, also include payment methods, switch between English and Portuguese.
 
-**Notes:** Added `admin.html` (login, booking list, status changes, payments and refunds), payment method choice with instructions for M-Pesa, e-Mola, mKesh and bank transfer, and an EN/PT switch on every page. Database changes are in `update-2-payments-language.sql`, tested for fresh installs, upgrades and permission rules.
+**Notes:** Added `admin.html` (login, booking list, status changes, payments and refunds), payment method choice with instructions for M-Pesa, e-Mola, mKesh and bank transfer, and an EN/PT switch on every page. Database changes are in `update-2-complete.sql`, tested for fresh installs, upgrades and permission rules.
+
+### 10. Fixing the update and the API key
+
+**Prompts:** "It says error for the first step", "give me all of them in one file", *(screenshots and console output)*, "It is working already"
+
+**Notes:** The SQL had been typed into Supabase's Logs page instead of the SQL Editor. The AI combined the update into one tested file with a built-in check, found that the API key in the pages was invalid ("401 Invalid API key"), verified the correct anon key belonged to the project, filled it into both pages, and filled in the hotel's payment details.
+
+### 11. Emails, rooms editor and receipts
+
+**Prompt:** Yes please. For now the mKesh number is not relevant, but the 3 suggestions we can add them.
+
+**Notes:** Added booking emails to guest and hotel (EmailJS, see `EMAIL-SETUP.md`), a Rooms & prices editor for managers on the staff page (`update-3-rooms-editor.sql`), printable receipts, a print button on the guest confirmation, and live room prices on the homepage. Tested against a simulated Supabase and EmailJS in both languages.

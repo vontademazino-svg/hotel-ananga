@@ -151,6 +151,55 @@
   .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* View switch (Bookings / Rooms) */
+  .views{display:inline-flex;background:var(--white);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:18px;gap:4px}
+  .views button{border:0;background:transparent;padding:8px 18px;border-radius:999px;font-weight:600;font-size:.88rem;color:var(--muted)}
+  .views button.on{background:var(--forest);color:var(--white)}
+
+  /* Rooms editor */
+  .rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .rcard{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:8px}
+  .rcard.off{opacity:.6}
+  .rcard h3{font-family:var(--sans);font-size:1.02rem;font-weight:600}
+  .rcard .pt{color:var(--muted);font-size:.84rem;margin-top:-4px}
+  .rcard .facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+  .rcard .price{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--forest)}
+  .rcard .price small{font-family:var(--sans);font-size:.78rem;color:var(--muted);font-weight:400}
+  .rcard .btn{align-self:flex-start;margin-top:4px}
+  .rform{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rform .full{grid-column:1/-1}
+  .rform textarea{min-height:74px;resize:vertical}
+  .check{display:flex;align-items:center;gap:10px;font-size:.92rem;color:var(--ink);font-weight:500;margin:0}
+  .check input{width:18px;height:18px}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+  /* Receipt (only visible when printing) */
+  #receipt{display:none}
+  @media print{
+    @page{margin:16mm}
+    body{background:#fff}
+    body > *:not(#receipt){display:none!important}
+    #receipt{display:block;color:#000;font-size:11pt;font-family:var(--sans)}
+  }
+  .rc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1e4d43;padding-bottom:12px;margin-bottom:18px}
+  .rc-head h1{font-family:var(--serif);font-size:24pt;color:#1e4d43;margin:0}
+  .rc-head .hotel{font-size:9.5pt;color:#444;line-height:1.5;margin-top:4px}
+  .rc-head .doc{text-align:right}
+  .rc-head .doc h2{font-family:var(--sans);font-size:14pt;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+  .rc-head .doc div{font-size:9.5pt;color:#444}
+  .rc-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:18px}
+  .rc-cols h3,.rc-sec h3{font-family:var(--sans);font-size:8.5pt;letter-spacing:.1em;text-transform:uppercase;color:#666;margin:0 0 6px}
+  .rc-cols p{margin:0;line-height:1.55}
+  .rc-sec{margin-bottom:16px}
+  .rc-sec table{width:100%;border-collapse:collapse;font-size:10pt}
+  .rc-sec th{text-align:left;border-bottom:1px solid #999;padding:6px 4px;font-size:8.5pt;text-transform:uppercase;letter-spacing:.06em;color:#555;background:none}
+  .rc-sec td{padding:6px 4px;border-bottom:1px solid #ddd}
+  .rc-sec .r{text-align:right}
+  .rc-tot{margin-left:auto;width:280px;font-size:10.5pt}
+  .rc-tot div{display:flex;justify-content:space-between;padding:4px 0}
+  .rc-tot .big{border-top:2px solid #1e4d43;margin-top:4px;padding-top:8px;font-weight:700;font-size:12pt}
+  .rc-foot{margin-top:28px;font-size:9pt;color:#555;text-align:center;border-top:1px solid #ddd;padding-top:10px}
+
   @media (max-width:1050px){ .stats{grid-template-columns:repeat(3,1fr)} }
   @media (max-width:760px){
     main{padding:18px 14px 50px}
@@ -167,6 +216,9 @@
     dl.kv{grid-template-columns:1fr}
     dl.kv dt{margin-top:4px}
     .pform{grid-template-columns:1fr}
+    .rform{grid-template-columns:1fr}
+    .views{display:flex}
+    .views button{flex:1}
     .login-card{padding:28px 22px}
   }
 </style>
@@ -210,6 +262,12 @@
     <div class="notice demo" id="appDemo" hidden data-i18n="demoApp">Demo mode: sample bookings only. Changes are not saved.</div>
     <div class="notice error" id="appError" hidden></div>
 
+    <div class="views" role="tablist">
+      <button type="button" data-view="bookings" class="on" data-i18n="viewBookings">Bookings</button>
+      <button type="button" data-view="rooms" data-i18n="viewRooms">Rooms &amp; prices</button>
+    </div>
+
+    <section id="bookingsView">
     <div class="head">
       <div>
         <h1 data-i18n="bookings">Bookings</h1>
@@ -242,6 +300,19 @@
       </table>
     </div>
     <div class="cards" id="cards"></div>
+    </section>
+
+    <section id="roomsView" hidden>
+      <div class="head">
+        <div>
+          <h1 data-i18n="viewRooms">Rooms &amp; prices</h1>
+          <div class="date" data-i18n="roomsSub">Changes appear on the website immediately. Existing bookings keep the price they were booked at.</div>
+        </div>
+        <button class="btn small" id="addRoomBtn" data-i18n="addRoom">+ Add room</button>
+      </div>
+      <div class="notice demo" id="readOnlyNote" hidden data-i18n="readOnly">Only managers can change rooms and prices. You can view them here.</div>
+      <div class="rooms-grid" id="roomsGrid"></div>
+    </section>
   </main>
 </div>
 
@@ -286,16 +357,54 @@
       </form>
       <div class="msg" id="payMsg"></div>
     </div>
+    <button type="button" class="btn light" id="printBtn" style="width:100%" data-i18n="printReceipt">Print receipt</button>
   </div>
 </aside>
+
+<!-- ============ ROOM EDITOR DRAWER ============ -->
+<aside class="drawer" id="roomDrawer" hidden aria-modal="true" role="dialog">
+  <header>
+    <div><h2 id="rTitle"></h2></div>
+    <button class="x" id="closeRoom" aria-label="Close">&times;</button>
+  </header>
+  <div class="body">
+    <form class="block rform" id="roomForm" novalidate>
+      <div><label for="rName" data-i18n="rName">Name (English)</label><input id="rName" maxlength="80" required></div>
+      <div><label for="rNamePt" data-i18n="rNamePt">Name (Português)</label><input id="rNamePt" maxlength="80"></div>
+      <div class="full"><label for="rDesc" data-i18n="rDesc">Description (English)</label><textarea id="rDesc" maxlength="400"></textarea></div>
+      <div class="full"><label for="rDescPt" data-i18n="rDescPt">Description (Português)</label><textarea id="rDescPt" maxlength="400"></textarea></div>
+      <div><label for="rPrice" data-i18n="rPrice">Price per night (MZN)</label><input id="rPrice" type="number" min="0" step="50" inputmode="decimal" required></div>
+      <div><label for="rCap" data-i18n="rCap">Max guests</label><input id="rCap" type="number" min="1" max="10" step="1" required></div>
+      <div><label for="rUnits" data-i18n="rUnits">Number of rooms of this type</label><input id="rUnits" type="number" min="0" max="500" step="1" required></div>
+      <div><label for="rSort" data-i18n="rSort">Display order</label><input id="rSort" type="number" min="0" max="999" step="1"></div>
+      <div class="full"><label for="rImg" data-i18n="rImg">Photo file</label><input id="rImg" maxlength="120" placeholder="graph/room-name.jpg">
+        <div class="hint" data-i18n="rImgHint">Upload the photo to the graph folder on GitHub, then write its name here.</div></div>
+      <div class="full"><label class="check"><input type="checkbox" id="rActive"> <span data-i18n="rActive">Show on website and accept bookings</span></label></div>
+      <div class="full"><button class="btn" type="submit" id="saveRoomBtn" data-i18n="saveRoom">Save room</button></div>
+      <div class="full msg" id="roomMsg"></div>
+    </form>
+  </div>
+</aside>
+
+<!-- ============ PRINTABLE RECEIPT ============ -->
+<div id="receipt"></div>
 
 <script>
 /* =========================================================
    CONFIGURATION — same values as in booking.html.
    Only the PUBLIC anon/publishable key goes here.
    ========================================================= */
-const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqa2RwenBubGxyZGxobmNjdGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTQ4OTgsImV4cCI6MjEwNzg5MDg5OH0.cifuHulxDpKQanyDBABAySZKfxoMVUJhObaGjAkD0cg';
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';       // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqa2RwenBubGxyZGxobmNjdGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTQ4OTgsImV4cCI6MjEwNzg5MDg5OH0.cifuHulxDpKQanyDBABAySZKfxoMVUJhObaGjAkD0cg';  // the 'anon public' or 'publishable' key
+
+/* HOTEL DETAILS printed on receipts — replace the [brackets] with real details */
+const HOTEL_INFO = {
+  name: 'Hotel Ananga',
+  address: '[Street address, city]',
+  phone: '+258 84 905 0766',
+  email: '[reservations email]',
+  nuit: ''                       // tax number (NUIT), optional — leave '' to hide
+};
 
 /* ---------- Languages ---------- */
 const I18N = {
@@ -325,7 +434,23 @@ const I18N = {
     badLogin:'Wrong email or password.', loadFail:'Could not load bookings. Check your connection and try again.',
     genericError:'Something went wrong. Please try again.', by:'by', today:'Today',
     nightsShort:'{n} night(s)', guestsShort:'{n} guest(s)',
-    errOver:'This would be more than the booking total.', errRefund:'Refund is larger than the amount paid.', errAuth:'You are not authorized. Please sign in again.'
+    errOver:'This would be more than the booking total.', errRefund:'Refund is larger than the amount paid.', errAuth:'You are not authorized. Please sign in again.',
+    viewBookings:'Bookings', viewRooms:'Rooms & prices', addRoom:'+ Add room',
+    roomsSub:'Changes appear on the website immediately. Existing bookings keep the price they were booked at.',
+    readOnly:'Only managers can change rooms and prices. You can view them here.',
+    rName:'Name (English)', rNamePt:'Name (Português)', rDesc:'Description (English)', rDescPt:'Description (Português)',
+    rPrice:'Price per night (MZN)', rCap:'Max guests', rUnits:'Number of rooms of this type', rSort:'Display order',
+    rImg:'Photo file', rImgHint:'Upload the photo to the graph folder on GitHub, then write its name here.',
+    rActive:'Show on website and accept bookings', saveRoom:'Save room', editRoom:'Edit room', newRoom:'New room', edit:'Edit',
+    hidden:'Hidden', roomsOfType:'{n} room(s)', upToGuests:'up to {n} guests', perNight:'per night', roomSaved:'Room saved.',
+    noRooms:'No rooms yet.', roleManager:'Manager', roleReception:'Reception',
+    errRoomName:'Enter a room name.', errRoomNums:'Check the price, guests and number of rooms.',
+    errManager:'Only managers can change rooms and prices.',
+    printReceipt:'Print receipt', receipt:'Receipt', receiptNo:'Booking reference', issued:'Issued',
+    billedTo:'Guest', stayDetails:'Stay', description:'Description', qty:'Nights', rate:'Rate', amountCol:'Amount',
+    accommodation:'Accommodation — {room}', paymentsReceived:'Payments received', dateCol:'Date', methodCol:'Method',
+    refCol:'Reference', balanceDue2:'Balance due', totalPaid:'Total paid', thankYou:'Thank you for staying with us.',
+    statusLbl:'Status', nuitLbl:'NUIT', none:'—'
   },
   pt: {
     loginTitle:'Acesso da equipa', loginSub:'Apenas para funcionários do hotel.', email:'Email', password:'Palavra-passe', signIn:'Entrar',
@@ -353,7 +478,23 @@ const I18N = {
     badLogin:'Email ou palavra-passe incorretos.', loadFail:'Não foi possível carregar as reservas. Verifique a ligação e tente novamente.',
     genericError:'Algo correu mal. Tente novamente.', by:'por', today:'Hoje',
     nightsShort:'{n} noite(s)', guestsShort:'{n} hóspede(s)',
-    errOver:'Isto ultrapassaria o total da reserva.', errRefund:'O reembolso é maior do que o valor pago.', errAuth:'Não tem autorização. Inicie sessão novamente.'
+    errOver:'Isto ultrapassaria o total da reserva.', errRefund:'O reembolso é maior do que o valor pago.', errAuth:'Não tem autorização. Inicie sessão novamente.',
+    viewBookings:'Reservas', viewRooms:'Quartos e preços', addRoom:'+ Adicionar quarto',
+    roomsSub:'As alterações aparecem no site imediatamente. As reservas existentes mantêm o preço da altura da reserva.',
+    readOnly:'Apenas gestores podem alterar quartos e preços. Aqui pode consultá-los.',
+    rName:'Nome (English)', rNamePt:'Nome (Português)', rDesc:'Descrição (English)', rDescPt:'Descrição (Português)',
+    rPrice:'Preço por noite (MZN)', rCap:'Máximo de hóspedes', rUnits:'Número de quartos deste tipo', rSort:'Ordem de apresentação',
+    rImg:'Ficheiro da foto', rImgHint:'Carregue a foto para a pasta graph no GitHub e escreva aqui o nome do ficheiro.',
+    rActive:'Mostrar no site e aceitar reservas', saveRoom:'Guardar quarto', editRoom:'Editar quarto', newRoom:'Novo quarto', edit:'Editar',
+    hidden:'Oculto', roomsOfType:'{n} quarto(s)', upToGuests:'até {n} hóspedes', perNight:'por noite', roomSaved:'Quarto guardado.',
+    noRooms:'Ainda não há quartos.', roleManager:'Gestor', roleReception:'Receção',
+    errRoomName:'Introduza o nome do quarto.', errRoomNums:'Verifique o preço, os hóspedes e o número de quartos.',
+    errManager:'Apenas gestores podem alterar quartos e preços.',
+    printReceipt:'Imprimir recibo', receipt:'Recibo', receiptNo:'Referência da reserva', issued:'Emitido em',
+    billedTo:'Hóspede', stayDetails:'Estadia', description:'Descrição', qty:'Noites', rate:'Preço', amountCol:'Valor',
+    accommodation:'Alojamento — {room}', paymentsReceived:'Pagamentos recebidos', dateCol:'Data', methodCol:'Método',
+    refCol:'Referência', balanceDue2:'Saldo em dívida', totalPaid:'Total pago', thankYou:'Obrigado pela sua estadia.',
+    statusLbl:'Estado', nuitLbl:'NUIT', none:'—'
   }
 };
 const LANG_KEY = 'ananga-lang';
@@ -373,6 +514,9 @@ function applyLang(){
   fillMethodSelect();
   if (bookings.length) render();
   if (current) openDrawer(current.reference, true);
+  if (rooms.length) renderRooms();
+  if (editingRoom) $('rTitle').textContent = t(editingRoom.id ? 'editRoom' : 'newRoom');
+  if (me.role && $('whoAmI').textContent) $('whoAmI').textContent = $('whoAmI').textContent.split(' · ')[0] + ' · ' + t(isManager() ? 'roleManager' : 'roleReception');
   $('todayLabel').textContent = t('today') + ': ' + fmtDate(TODAY, true);
 }
 function setLang(l){ lang = l; try { localStorage.setItem(LANG_KEY, l) } catch(e) {} applyLang(); }
@@ -404,7 +548,7 @@ const api = LIVE ? {
   async session(){ const { data } = await sb.auth.getSession(); return data.session; },
   async signIn(email, password){
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw Object.assign(new Error(t('badLogin')), { friendly:true });
+    if (error) { if (/Invalid API key|No API key/i.test(error.message || '')) throw error; throw Object.assign(new Error(t('badLogin')), { friendly:true }); }
     return data.session;
   },
   async isStaff(){ const { data, error } = await sb.rpc('is_staff'); if (error) throw error; return data === true; },
@@ -415,6 +559,18 @@ const api = LIVE ? {
   async pay(ref, amount, method, txn, notes){
     const { error } = await sb.rpc('record_payment', { p_reference: ref, p_amount: amount, p_method: method, p_transaction_ref: txn || null, p_notes: notes || null });
     if (error) throw error;
+  },
+  async me(){
+    const { data, error } = await sb.rpc('staff_me');
+    if (error) return { full_name: '', role: 'reception', missingUpdate: /staff_me|schema cache|does not exist/i.test(error.message || '') };
+    return (data && data[0]) || { full_name: '', role: 'reception' };
+  },
+  async rooms(){ const { data, error } = await sb.rpc('staff_rooms'); if (error) throw error; return data; },
+  async saveRoom(r){
+    const { data, error } = await sb.rpc('save_room', { p_id: r.id, p_name: r.name, p_name_pt: r.name_pt, p_description: r.description,
+      p_description_pt: r.description_pt, p_capacity: r.capacity, p_price: r.price_per_night, p_units: r.total_units,
+      p_image_path: r.image_path, p_sort_order: r.sort_order, p_active: r.active });
+    if (error) throw error; return data;
   }
 } : demoApi();
 
@@ -458,17 +614,35 @@ function demoApi(){
       if (b.amount_paid + amount > b.total_price) throw new Error('This would be more than the booking total.');
       b.amount_paid += amount;
       (pays[ref] = pays[ref] || []).push({ amount, method, transaction_ref: txn || null, notes: notes || null, created_at: new Date().toISOString(), recorded_by_name: 'Demo' });
+    },
+    async me(){ return { full_name: 'Demo Manager', role: 'manager' }; },
+    async rooms(){ await wait(); return demoRooms.map(r => ({...r})); },
+    async saveRoom(r){
+      await wait();
+      if (!r.name) throw new Error('Enter a room name.');
+      if (r.id) { Object.assign(demoRooms.find(x => x.id === r.id), r); return r.id; }
+      const id = Math.max(...demoRooms.map(x => x.id)) + 1;
+      demoRooms.push({ ...r, id, currency:'MZN' }); return id;
     }
   };
 }
+const demoRooms = [
+  {id:1, name:'Standard Room', name_pt:'Quarto Standard', description:'A calm, well-appointed room with a queen bed, work desk and en-suite shower.', description_pt:'Um quarto calmo e bem equipado, com cama de casal, secretária e casa de banho privativa com duche.', capacity:2, price_per_night:3500, currency:'MZN', total_units:8, image_path:'graph/room-standard.jpg', sort_order:1, active:true},
+  {id:2, name:'Deluxe Room', name_pt:'Quarto Deluxe', description:'More space and natural light, with a king bed, seating area and garden view.', description_pt:'Mais espaço e luz natural, com cama king size, zona de estar e vista para o jardim.', capacity:2, price_per_night:4800, currency:'MZN', total_units:6, image_path:'graph/room-deluxe.jpg', sort_order:2, active:true},
+  {id:3, name:'Family Room', name_pt:'Quarto Familiar', description:'Two connected sleeping areas for families, with a king bed and two singles.', description_pt:'Duas áreas de dormir ligadas, ideal para famílias, com cama king size e duas camas de solteiro.', capacity:4, price_per_night:6500, currency:'MZN', total_units:3, image_path:'graph/room-family.jpg', sort_order:3, active:true},
+  {id:4, name:'Ananga Suite', name_pt:'Suite Ananga', description:'Our finest room: separate living area, king bed, bathtub and private balcony.', description_pt:'O nosso melhor quarto: sala de estar separada, cama king size, banheira e varanda privativa.', capacity:2, price_per_night:9500, currency:'MZN', total_units:2, image_path:'graph/room-suite.jpg', sort_order:4, active:true}
+];
 
 function errText(err){
   if (err && err.friendly) return err.message;
   const m = (err && err.message) || '';
+  if (/Invalid API key|No API key/i.test(m)) return 'Setup problem: Supabase rejected the API key in this file ("' + m + '"). Copy the anon public key again from Supabase → Project Settings → API Keys.';
   if (/Failed to fetch|NetworkError/i.test(m)) return t('loadFail');
   if (/more than the booking total/i.test(m)) return t('errOver');
   if (/Refund is larger/i.test(m)) return t('errRefund');
   if (/Not authorized|JWT/i.test(m)) return t('errAuth');
+  if (/Only managers/i.test(m)) return t('errManager');
+  if (/Enter a room name/i.test(m)) return t('errRoomName');
   if (m && m.length < 160) return m;
   console.error(err);
   return t('genericError');
@@ -478,6 +652,11 @@ function errText(err){
 let bookings = [];
 let tab = 'upcoming';
 let current = null;
+let me = { full_name: '', role: 'reception' };
+let rooms = [];
+let view = 'bookings';
+let editingRoom = null;
+const isManager = () => me.role === 'manager';
 
 /* ---------- Auth ---------- */
 async function start(){
@@ -514,12 +693,15 @@ $('loginForm').addEventListener('submit', async e => {
 
 async function enterApp(session){
   $('loginView').hidden = true; $('appView').hidden = false;
-  $('whoAmI').textContent = session && session.user ? session.user.email : '';
+  me = await api.me();
+  const email = session && session.user ? session.user.email : '';
+  $('whoAmI').textContent = (me.full_name || email) + ' · ' + t(isManager() ? 'roleManager' : 'roleReception');
+  setView('bookings');
   await load();
 }
 
 $('signOutBtn').addEventListener('click', async () => {
-  await api.signOut(); bookings = []; closeDrawer(); showLogin();
+  await api.signOut(); bookings = []; rooms = []; closeDrawer(); closeRoom(); showLogin();
 });
 
 /* ---------- Load + render ---------- */
@@ -665,8 +847,8 @@ function closeDrawer(){
   current = null; $('overlay').hidden = true; $('drawer').hidden = true; document.body.style.overflow = '';
 }
 $('closeDrawer').addEventListener('click', closeDrawer);
-$('overlay').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && current) closeDrawer(); });
+$('overlay').addEventListener('click', () => { closeDrawer(); closeRoom(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (current) closeDrawer(); if (editingRoom) closeRoom(); } });
 
 async function changeStatus(b, status, btn){
   if (status === 'cancelled' && !confirm(t('noShowCancel'))) return;
@@ -704,6 +886,126 @@ $('payForm').addEventListener('submit', async e => {
   } catch(err) {
     msg.className = 'msg err'; msg.textContent = errText(err);
   } finally { btn.disabled = false; }
+});
+
+/* ---------- Views ---------- */
+function setView(v){
+  view = v;
+  document.querySelectorAll('.views button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  $('bookingsView').hidden = v !== 'bookings';
+  $('roomsView').hidden = v !== 'rooms';
+  if (v === 'rooms') loadRooms();
+}
+document.querySelectorAll('.views button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+
+/* ---------- Rooms & prices ---------- */
+async function loadRooms(){
+  showBox('appError', '');
+  $('addRoomBtn').hidden = !isManager();
+  $('readOnlyNote').hidden = isManager();
+  try { rooms = await api.rooms(); renderRooms(); }
+  catch(err) { showBox('appError', errText(err)); }
+}
+function renderRooms(){
+  $('roomsGrid').innerHTML = rooms.length ? rooms.map(r => `
+    <article class="rcard ${r.active ? '' : 'off'}">
+      <h3>${esc(r.name)} ${r.active ? '' : `<span class="pill s-cancelled">${t('hidden')}</span>`}</h3>
+      ${r.name_pt ? `<div class="pt">${esc(r.name_pt)}</div>` : ''}
+      <div class="price">${money(r.price_per_night, r.currency)} <small>${t('perNight')}</small></div>
+      <div class="facts"><span>${t('roomsOfType',{n:r.total_units})}</span><span>${t('upToGuests',{n:r.capacity})}</span></div>
+      ${isManager() ? `<button type="button" class="btn light small" data-room="${r.id}">${t('edit')}</button>` : ''}
+    </article>`).join('') : `<div class="empty">${t('noRooms')}</div>`;
+  $('roomsGrid').querySelectorAll('[data-room]').forEach(b => b.onclick = () => openRoom(rooms.find(r => String(r.id) === b.dataset.room)));
+}
+$('addRoomBtn').addEventListener('click', () => openRoom(null));
+
+function openRoom(r){
+  editingRoom = r ? { ...r } : { id: null };
+  $('rTitle').textContent = t(r ? 'editRoom' : 'newRoom');
+  $('rName').value = r ? r.name : '';
+  $('rNamePt').value = r ? (r.name_pt || '') : '';
+  $('rDesc').value = r ? (r.description || '') : '';
+  $('rDescPt').value = r ? (r.description_pt || '') : '';
+  $('rPrice').value = r ? r.price_per_night : '';
+  $('rCap').value = r ? r.capacity : 2;
+  $('rUnits').value = r ? r.total_units : 1;
+  $('rSort').value = r ? r.sort_order : (rooms.length ? Math.max(...rooms.map(x => x.sort_order || 0)) + 1 : 1);
+  $('rImg').value = r ? (r.image_path || '') : '';
+  $('rActive').checked = r ? r.active : true;
+  $('roomMsg').textContent = '';
+  $('overlay').hidden = false; $('roomDrawer').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('rName').focus({preventScroll:true});
+}
+function closeRoom(){
+  editingRoom = null; $('roomDrawer').hidden = true;
+  if (!current) { $('overlay').hidden = true; document.body.style.overflow = ''; }
+}
+$('closeRoom').addEventListener('click', closeRoom);
+
+$('roomForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = $('roomMsg');
+  const r = {
+    id: editingRoom ? editingRoom.id : null,
+    name: $('rName').value.trim(), name_pt: $('rNamePt').value.trim(),
+    description: $('rDesc').value.trim(), description_pt: $('rDescPt').value.trim(),
+    price_per_night: Number($('rPrice').value), capacity: parseInt($('rCap').value, 10),
+    total_units: parseInt($('rUnits').value, 10), sort_order: parseInt($('rSort').value || '0', 10),
+    image_path: $('rImg').value.trim(), active: $('rActive').checked
+  };
+  if (!r.name) { msg.className = 'full msg err'; msg.textContent = t('errRoomName'); return; }
+  if (!(r.price_per_night >= 0) || $('rPrice').value === '' || !(r.capacity >= 1 && r.capacity <= 10) || !(r.total_units >= 0)) {
+    msg.className = 'full msg err'; msg.textContent = t('errRoomNums'); return;
+  }
+  const btn = $('saveRoomBtn'); btn.disabled = true;
+  try {
+    await api.saveRoom(r);
+    await loadRooms();
+    closeRoom();
+  } catch(err) {
+    msg.className = 'full msg err'; msg.textContent = errText(err);
+  } finally { btn.disabled = false; }
+});
+
+/* ---------- Printable receipt ---------- */
+$('printBtn').addEventListener('click', async () => {
+  const b = current; if (!b) return;
+  let ps = [];
+  try { ps = await api.payments(b.reference); } catch(e) {}
+  const total = Number(b.total_price), paid = Number(b.amount_paid), bal = Math.max(0, total - paid);
+  const rate = b.nights ? total / b.nights : total;
+  const H = HOTEL_INFO;
+  const line = v => v && !/^\[.*\]$/.test(v) ? esc(v) + '<br>' : '';
+  $('receipt').innerHTML = `
+    <div class="rc-head">
+      <div><h1>${esc(H.name)}</h1>
+        <div class="hotel">${line(H.address)}${line(H.phone)}${line(H.email)}${H.nuit ? t('nuitLbl') + ': ' + esc(H.nuit) : ''}</div></div>
+      <div class="doc"><h2>${t('receipt')}</h2>
+        <div>${t('receiptNo')}: <b>${esc(b.reference)}</b></div>
+        <div>${t('issued')}: ${new Date().toLocaleDateString(locale(), {day:'numeric', month:'long', year:'numeric'})}</div>
+        <div>${t('statusLbl')}: ${t('st_' + b.status)}</div></div>
+    </div>
+    <div class="rc-cols">
+      <div><h3>${t('billedTo')}</h3><p><b>${esc(b.guest_name)}</b><br>${esc(b.phone)}<br>${esc(b.email)}</p></div>
+      <div><h3>${t('stayDetails')}</h3><p>${esc(b.room_name)}<br>${fmtDate(b.check_in, true)} → ${fmtDate(b.check_out, true)}<br>${t('nightsShort',{n:b.nights})} · ${t('guestsShort',{n:b.guests})}</p></div>
+    </div>
+    <div class="rc-sec"><table>
+      <thead><tr><th>${t('description')}</th><th class="r">${t('qty')}</th><th class="r">${t('rate')}</th><th class="r">${t('amountCol')}</th></tr></thead>
+      <tbody><tr><td>${t('accommodation',{room: esc(b.room_name)})}</td><td class="r">${b.nights}</td><td class="r">${money(rate, b.currency)}</td><td class="r">${money(total, b.currency)}</td></tr></tbody>
+    </table></div>
+    <div class="rc-sec"><h3>${t('paymentsReceived')}</h3><table>
+      <thead><tr><th>${t('dateCol')}</th><th>${t('methodCol')}</th><th>${t('refCol')}</th><th class="r">${t('amountCol')}</th></tr></thead>
+      <tbody>${ps.length ? ps.map(p => `<tr><td>${new Date(p.created_at).toLocaleDateString(locale())}</td><td>${t('pm_'+p.method)}</td><td>${esc(p.transaction_ref || t('none'))}</td><td class="r">${money(p.amount, b.currency)}</td></tr>`).join('')
+        : `<tr><td colspan="4">${t('noPayments')}</td></tr>`}</tbody>
+    </table></div>
+    <div class="rc-tot">
+      <div><span>${t('total')}</span><span>${money(total, b.currency)}</span></div>
+      <div><span>${t('totalPaid')}</span><span>${money(paid, b.currency)}</span></div>
+      <div class="big"><span>${t('balanceDue2')}</span><span>${money(bal, b.currency)}</span></div>
+    </div>
+    <div class="rc-foot">${t('thankYou')} · ${esc(H.name)}</div>`;
+  window.print();
 });
 
 start();

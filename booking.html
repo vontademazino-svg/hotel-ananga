@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms &amp; Booking — Hotel Ananga</title>
+<meta name="description" content="Check availability and book your room at Hotel Ananga.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1f2a27; --muted:#5d6b66; --paper:#faf7f1; --sand:#efe7d8; --line:#e2d8c6;
+    --forest:#1e4d43; --forest-dark:#153a32; --brass:#b08a4a; --white:#fff;
+    --danger:#a23b2a; --ok:#2f6b4f;
+    --radius:14px; --max:1180px;
+    --serif:"Cormorant Garamond", Georgia, serif; --sans:"Inter", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;font-size:16px}
+  img{display:block;max-width:100%}
+  a{color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15}
+  .eyebrow{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);font-weight:600}
+  [hidden]{display:none!important}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(250,247,241,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{font-family:var(--serif);font-size:1.6rem;font-weight:700;text-decoration:none;color:var(--forest)}
+  .brand span{color:var(--brass)}
+  nav ul{list-style:none;display:flex;gap:28px;align-items:center}
+  nav a{text-decoration:none;font-size:.95rem;color:var(--muted);font-weight:500}
+  nav a:hover,nav a[aria-current="page"]{color:var(--forest)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--forest);color:var(--white);padding:13px 24px;border-radius:999px;text-decoration:none;font:600 .95rem var(--sans);border:0;cursor:pointer;transition:background .2s,opacity .2s}
+  .btn:hover{background:var(--forest-dark)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.light{background:transparent;color:var(--forest);border:1.5px solid var(--forest)}
+  .btn.light:hover{background:var(--sand)}
+  .menu-toggle{display:none;background:none;border:0;font-size:1.6rem;color:var(--forest);cursor:pointer}
+
+  .page-head{background:var(--forest);color:var(--white);padding:64px 0 120px}
+  .page-head h1{font-size:clamp(2.4rem,5vw,3.6rem);margin:10px 0 10px}
+  .page-head p{opacity:.85;max-width:560px}
+  .page-head .eyebrow{color:#e3c995}
+
+  /* Search box overlaps the header band */
+  .search{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 18px 40px -20px rgba(20,50,42,.35);padding:24px;margin-top:-80px;position:relative;display:grid;grid-template-columns:1fr 1fr 150px auto;gap:16px;align-items:end}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+  input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea{resize:vertical;min-height:90px}
+
+  .notice{margin:24px 0 0;padding:14px 18px;border-radius:10px;font-size:.92rem}
+  .notice.demo{background:#fbf1dc;border:1px solid #ecd6a6;color:#6b5320}
+  .notice.error{background:#f8e6e2;border:1px solid #ebc4bb;color:var(--danger)}
+
+  main section{padding:56px 0}
+  .steps{display:flex;gap:10px;margin:40px 0 8px;font-size:.85rem;color:var(--muted);flex-wrap:wrap}
+  .steps span{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--white)}
+  .steps span.active{background:var(--forest);color:var(--white);border-color:var(--forest)}
+
+  .results-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .results-head h2{font-size:2rem}
+  .results-head p{color:var(--muted);font-size:.95rem}
+
+  .room{display:grid;grid-template-columns:300px 1fr auto;gap:0;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
+  .room.unavailable{opacity:.6}
+  .media{position:relative;background:linear-gradient(135deg,#d9cdb6,#c7b89c);min-height:200px}
+  .media::after{content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:rgba(31,42,39,.55);padding:12px;text-align:center}
+  .media img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover}
+  .room-info{padding:24px 26px}
+  .room-info h3{font-size:1.6rem;margin-bottom:4px}
+  .room-info .meta{font-size:.85rem;color:var(--muted);margin-bottom:10px}
+  .room-info p{color:var(--muted);font-size:.95rem}
+  .badge{display:inline-block;font-size:.75rem;font-weight:600;padding:4px 10px;border-radius:999px;margin-top:12px}
+  .badge.ok{background:#e3efe8;color:var(--ok)}
+  .badge.low{background:#fbf1dc;color:#8a6420}
+  .badge.none{background:#f2e3df;color:var(--danger)}
+  .room-price{padding:24px 26px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;align-items:flex-end;text-align:right;min-width:210px;gap:4px}
+  .room-price .total{font-family:var(--serif);font-size:1.9rem;color:var(--forest);font-weight:700;line-height:1}
+  .room-price small{color:var(--muted);font-size:.82rem;margin-bottom:12px}
+
+  .checkout{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}
+  .panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+  .panel h2{font-size:1.8rem;margin-bottom:18px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-grid .full{grid-column:1/-1}
+  .summary dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:.95rem}
+  .summary dt{color:var(--muted)}
+  .summary dd{text-align:right;font-weight:500}
+  .summary .grand{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:flex;justify-content:space-between;align-items:baseline}
+  .summary .grand strong{font-family:var(--serif);font-size:1.8rem;color:var(--forest)}
+  .fine{font-size:.82rem;color:var(--muted);margin-top:14px}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+
+  .confirm{text-align:center;max-width:620px;margin:0 auto}
+  .confirm .tick{width:68px;height:68px;border-radius:50%;background:#e3efe8;color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 18px}
+  .confirm h2{font-size:2.4rem;margin-bottom:10px}
+  .confirm .ref{display:inline-block;font:600 1.5rem/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;background:var(--sand);padding:14px 22px;border-radius:10px;margin:16px 0}
+  .confirm p{color:var(--muted)}
+
+  .policies{background:var(--sand);padding:56px 0}
+  .policies .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .policies h3{font-size:1.35rem;margin-bottom:6px}
+  .policies p{color:var(--muted);font-size:.93rem}
+
+  footer{background:var(--forest-dark);color:rgba(255,255,255,.75);padding:48px 0;font-size:.9rem}
+  .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:center}
+  footer .brand{color:var(--white)}
+  footer a{text-decoration:none}
+  footer a:hover{color:var(--white)}
+  footer ul{list-style:none;display:flex;gap:22px}
+
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width:900px){
+    .search{grid-template-columns:1fr 1fr}
+    .search .btn{grid-column:1/-1}
+    .room{grid-template-columns:1fr}
+    .room-price{border-left:0;border-top:1px solid var(--line);align-items:stretch;text-align:left}
+    .checkout{grid-template-columns:1fr}
+    .policies .grid{grid-template-columns:1fr}
+  }
+  @media (max-width:720px){
+    .wrap{padding:0 16px}
+    .menu-toggle{display:block}
+    nav ul{display:none;position:absolute;top:72px;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:var(--paper);border-bottom:1px solid var(--line);padding:8px 16px 16px}
+    nav ul.open{display:flex}
+    nav li{width:100%;padding:10px 0}
+    .search{grid-template-columns:1fr;padding:18px}
+    .form-grid{grid-template-columns:1fr}
+    .panel{padding:20px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
+    <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" id="menuBtn">&#9776;</button>
+    <nav>
+      <ul id="menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#rooms">Rooms</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="booking.html" aria-current="page">Rooms &amp; Booking</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="page-head">
+  <div class="wrap">
+    <div class="eyebrow">Reservations</div>
+    <h1>Book your stay</h1>
+    <p>Choose your dates to see which rooms are available, then reserve in a few simple steps.</p>
+  </div>
+</div>
+
+<main class="wrap">
+  <form class="search" id="searchForm" novalidate>
+    <div><label for="checkIn">Check-in</label><input type="date" id="checkIn" required></div>
+    <div><label for="checkOut">Check-out</label><input type="date" id="checkOut" required></div>
+    <div><label for="guests">Guests</label>
+      <select id="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+    </div>
+    <button class="btn" type="submit" id="searchBtn">Check Availability</button>
+  </form>
+
+  <div class="notice demo" id="demoNotice" hidden>
+    <strong>Demo mode:</strong> the booking database is not connected yet, so rooms shown are sample data and reservations are not saved. Add your Supabase project URL and anon key in this file to go live.
+  </div>
+  <div class="notice error" id="errorBox" role="alert" hidden></div>
+
+  <div class="steps" aria-hidden="true">
+    <span id="step1" class="active">1. Choose dates</span>
+    <span id="step2">2. Select room</span>
+    <span id="step3">3. Your details</span>
+    <span id="step4">4. Confirmation</span>
+  </div>
+
+  <!-- Step 2: results -->
+  <section id="resultsSection" hidden>
+    <div class="results-head">
+      <h2>Available rooms</h2>
+      <p id="resultsSummary"></p>
+    </div>
+    <div id="results"></div>
+  </section>
+
+  <!-- Step 3: guest details -->
+  <section id="detailsSection" hidden>
+    <div class="checkout">
+      <form class="panel" id="detailsForm" novalidate>
+        <h2>Your details</h2>
+        <div class="form-grid">
+          <div class="full"><label for="name">Full name</label><input id="name" autocomplete="name" required minlength="2" maxlength="120"></div>
+          <div><label for="email">Email</label><input id="email" type="email" autocomplete="email" required></div>
+          <div><label for="phone">Phone (with country code)</label><input id="phone" type="tel" autocomplete="tel" required placeholder="+258 ..." minlength="6" maxlength="30"></div>
+          <div class="full"><label for="notes">Special requests (optional)</label><textarea id="notes" maxlength="1000" placeholder="Arrival time, extra bed, dietary needs..."></textarea></div>
+        </div>
+        <div class="actions">
+          <button class="btn" type="submit" id="bookBtn">Confirm Reservation</button>
+          <button class="btn light" type="button" id="backBtn">Change room</button>
+        </div>
+        <p class="fine">Payment is made at the hotel. We will contact you to confirm your reservation.</p>
+      </form>
+      <aside class="panel summary">
+        <h2>Your stay</h2>
+        <dl id="summaryList"></dl>
+        <div class="grand"><span>Total</span><strong id="summaryTotal"></strong></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Step 4: confirmation -->
+  <section id="confirmSection" hidden>
+    <div class="confirm panel">
+      <div class="tick">&#10003;</div>
+      <h2>Reservation received</h2>
+      <p>Thank you, <span id="confirmName"></span>. Please keep your booking reference:</p>
+      <div class="ref" id="confirmRef"></div>
+      <p id="confirmDetails"></p>
+      <div class="actions" style="justify-content:center">
+        <a class="btn" href="index.html">Back to Home</a>
+        <button class="btn light" type="button" id="newBookingBtn">Make another booking</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="policies">
+  <div class="wrap grid">
+    <div><h3>Check-in &amp; check-out</h3><p>Check-in from 14:00, check-out until 11:00. Early check-in is subject to availability.</p></div>
+    <div><h3>Payment</h3><p>Pay on arrival. The hotel will contact you to confirm your reservation and any deposit required.</p></div>
+    <div><h3>Changes &amp; cancellations</h3><p>Please contact reception with your booking reference to change or cancel your stay.</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="index.html">Hotel <span style="color:var(--brass)">Ananga</span></a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="booking.html">Rooms &amp; Booking</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <div>&copy; <span id="year"></span> Hotel Ananga. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   CONFIGURATION — paste your Supabase values here.
+   Only the PUBLIC anon key goes here (never the service_role key).
+   Supabase dashboard → Project Settings → API.
+   ========================================================= */
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_SgfLDZBPbMAigv68xckWMw_1K9Gouwm';
+
+/* Keep only 'https://xxxx.supabase.co', even if '/rest/v1/' or a trailing slash was pasted */
+let CONFIG_ERROR = '';
+let BASE_URL = '';
+if (SUPABASE_URL) {
+  try {
+    const u = new URL(SUPABASE_URL.trim());
+    BASE_URL = u.origin;
+    if (!/\.supabase\.co$/.test(u.hostname))
+      CONFIG_ERROR = 'Setup problem: SUPABASE_URL must look like https://xxxx.supabase.co (copy the Project URL, not the dashboard address).';
+  } catch (e) {
+    CONFIG_ERROR = 'Setup problem: SUPABASE_URL is not a valid web address.';
+  }
+}
+const LIVE = Boolean(BASE_URL && SUPABASE_ANON_KEY && window.supabase && !CONFIG_ERROR);
+const db = LIVE ? window.supabase.createClient(BASE_URL, SUPABASE_ANON_KEY.trim()) : null;
+
+/* Sample rooms used only in demo mode (mirror of supabase/schema.sql seed data) */
+const DEMO_ROOMS = [
+  {room_id:1, slug:'standard', name:'Standard Room', description:'A calm, well-appointed room with a queen bed, work desk and en-suite shower.', capacity:2, price_per_night:3500, currency:'MZN', image_path:'graph/room-standard.jpg', units_available:8},
+  {room_id:2, slug:'deluxe', name:'Deluxe Room', description:'More space and natural light, with a king bed, seating area and garden view.', capacity:2, price_per_night:4800, currency:'MZN', image_path:'graph/room-deluxe.jpg', units_available:2},
+  {room_id:3, slug:'family', name:'Family Room', description:'Two connected sleeping areas for families, with a king bed and two singles.', capacity:4, price_per_night:6500, currency:'MZN', image_path:'graph/room-family.jpg', units_available:3},
+  {room_id:4, slug:'suite', name:'Ananga Suite', description:'Our finest room: separate living area, king bed, bathtub and private balcony.', capacity:2, price_per_night:9500, currency:'MZN', image_path:'graph/room-suite.jpg', units_available:0},
+];
+
+const $ = id => document.getElementById(id);
+const state = { checkIn:null, checkOut:null, guests:2, nights:0, room:null };
+
+/* ---------- helpers ---------- */
+const money = (n, cur='MZN') => cur + ' ' + Number(n).toLocaleString('en-US', {maximumFractionDigits:2});
+const iso = d => d.toISOString().slice(0,10);
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+const nightsBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const niceDate = s => new Date(s + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function showError(msg){ const b = $('errorBox'); b.textContent = msg; b.hidden = !msg; if (msg) b.scrollIntoView({behavior:'smooth', block:'center'}); }
+function setStep(n){ [1,2,3,4].forEach(i => $('step'+i).classList.toggle('active', i === n)); }
+function show(section){
+  ['resultsSection','detailsSection','confirmSection'].forEach(id => $(id).hidden = (id !== section));
+  if (section) $(section).scrollIntoView({behavior:'smooth', block:'start'});
+}
+function busy(btn, on, label){
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner"></span> Please wait' : label;
+}
+
+/* ---------- step 1: dates ---------- */
+const today = iso(new Date(Date.now() - new Date().getTimezoneOffset()*60000));
+$('checkIn').min = today;
+$('checkIn').value = addDays(today, 1);
+$('checkOut').min = addDays(today, 1);
+$('checkOut').value = addDays(today, 3);
+$('checkIn').addEventListener('change', () => {
+  const ci = $('checkIn').value;
+  if (!ci) return;
+  $('checkOut').min = addDays(ci, 1);
+  if (!$('checkOut').value || $('checkOut').value <= ci) $('checkOut').value = addDays(ci, 1);
+});
+
+$('searchForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showError('');
+  const ci = $('checkIn').value, co = $('checkOut').value, g = +$('guests').value;
+  if (!ci || !co) return showError('Please choose both check-in and check-out dates.');
+  if (ci < today) return showError('Check-in cannot be in the past.');
+  if (co <= ci) return showError('Check-out must be after check-in.');
+  const nights = nightsBetween(ci, co);
+  if (nights > 30) return showError('Online bookings are limited to 30 nights. Please contact us for longer stays.');
+
+  Object.assign(state, {checkIn:ci, checkOut:co, guests:g, nights, room:null});
+  const btn = $('searchBtn');
+  busy(btn, true);
+  try {
+    let rooms;
+    if (LIVE) {
+      const { data, error } = await db.rpc('get_availability', { p_check_in: ci, p_check_out: co });
+      if (error) throw error;
+      rooms = data;
+    } else {
+      rooms = DEMO_ROOMS.map(r => ({...r, nights, total_price: r.price_per_night * nights}));
+    }
+    renderRooms(rooms);
+    setStep(2);
+    show('resultsSection');
+  } catch (err) {
+    showError(friendly(err));
+  } finally {
+    busy(btn, false, 'Check Availability');
+  }
+});
+
+/* ---------- step 2: rooms ---------- */
+function renderRooms(rooms){
+  $('resultsSummary').textContent =
+    `${niceDate(state.checkIn)} → ${niceDate(state.checkOut)} · ${state.nights} night${state.nights>1?'s':''} · ${state.guests} guest${state.guests>1?'s':''}`;
+  const list = $('results');
+  list.innerHTML = '';
+  if (!rooms.length) { list.innerHTML = '<p>No rooms are listed yet.</p>'; return; }
+
+  rooms.forEach(r => {
+    const fits = state.guests <= r.capacity;
+    const avail = r.units_available > 0;
+    const ok = fits && avail;
+    let badge;
+    if (!avail) badge = '<span class="badge none">Fully booked for these dates</span>';
+    else if (!fits) badge = `<span class="badge none">Holds up to ${r.capacity} guests</span>`;
+    else if (r.units_available <= 2) badge = `<span class="badge low">Only ${r.units_available} left</span>`;
+    else badge = '<span class="badge ok">Available</span>';
+
+    const el = document.createElement('article');
+    el.className = 'room' + (ok ? '' : ' unavailable');
+    el.innerHTML = `
+      <div class="media" data-label="${esc(r.image_path || 'Room photo')}">
+        ${r.image_path ? `<img src="${esc(r.image_path)}" alt="${esc(r.name)}" onerror="this.remove()">` : ''}
+      </div>
+      <div class="room-info">
+        <h3>${esc(r.name)}</h3>
+        <div class="meta">Up to ${r.capacity} guests · ${money(r.price_per_night, r.currency)} per night</div>
+        <p>${esc(r.description)}</p>
+        ${badge}
+      </div>
+      <div class="room-price">
+        <div class="total">${money(r.total_price, r.currency)}</div>
+        <small>total for ${state.nights} night${state.nights>1?'s':''}</small>
+        <button class="btn" type="button" ${ok ? '' : 'disabled'}>Select</button>
+      </div>`;
+    el.querySelector('button').addEventListener('click', () => selectRoom(r));
+    list.appendChild(el);
+  });
+}
+
+/* ---------- step 3: details ---------- */
+function selectRoom(r){
+  state.room = r;
+  $('summaryList').innerHTML = `
+    <dt>Room</dt><dd>${esc(r.name)}</dd>
+    <dt>Check-in</dt><dd>${niceDate(state.checkIn)}</dd>
+    <dt>Check-out</dt><dd>${niceDate(state.checkOut)}</dd>
+    <dt>Nights</dt><dd>${state.nights}</dd>
+    <dt>Guests</dt><dd>${state.guests}</dd>
+    <dt>Rate</dt><dd>${money(r.price_per_night, r.currency)} / night</dd>`;
+  $('summaryTotal').textContent = money(r.total_price, r.currency);
+  showError('');
+  setStep(3);
+  show('detailsSection');
+  $('name').focus({preventScroll:true});
+}
+
+$('backBtn').addEventListener('click', () => { setStep(2); show('resultsSection'); });
+
+$('detailsForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showError('');
+  const name = $('name').value.trim(), email = $('email').value.trim(),
+        phone = $('phone').value.trim(), notes = $('notes').value.trim();
+  if (name.length < 2) return showError('Please enter your full name.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showError('Please enter a valid email address.');
+  if (phone.replace(/\D/g,'').length < 6) return showError('Please enter a valid phone number.');
+
+  const btn = $('bookBtn');
+  busy(btn, true);
+  try {
+    let result;
+    if (LIVE) {
+      const { data, error } = await db.rpc('create_booking', {
+        p_room_id: state.room.room_id, p_guest_name: name, p_email: email, p_phone: phone,
+        p_check_in: state.checkIn, p_check_out: state.checkOut, p_guests: state.guests, p_notes: notes || null
+      });
+      if (error) throw error;
+      result = data[0];
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+      result = { reference: 'DEMO-' + Math.random().toString(36).slice(2,8).toUpperCase(),
+                 total_price: state.room.total_price, currency: state.room.currency, nights: state.nights };
+    }
+    $('confirmName').textContent = name;
+    $('confirmRef').textContent = result.reference;
+    $('confirmDetails').textContent =
+      `${state.room.name} · ${niceDate(state.checkIn)} to ${niceDate(state.checkOut)} · ${result.nights} night${result.nights>1?'s':''} · Total ${money(result.total_price, result.currency)}. ` +
+      (LIVE ? 'We will contact you shortly to confirm.' : '(Demo booking — not saved.)');
+    $('detailsForm').reset();
+    setStep(4);
+    show('confirmSection');
+  } catch (err) {
+    showError(friendly(err));
+  } finally {
+    busy(btn, false, 'Confirm Reservation');
+  }
+});
+
+$('newBookingBtn').addEventListener('click', () => {
+  setStep(1); show(null);
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+/* Turn database / network errors into guest-friendly messages */
+function friendly(err){
+  const msg = (err && err.message) || '';
+  if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'We could not reach the booking system. Please check your connection and try again.';
+  if (msg && msg.length < 160 && !/function|permission|syntax|relation/i.test(msg)) return msg;
+  console.error(err);
+  return 'Something went wrong. Please try again, or contact the hotel directly.';
+}
+
+/* ---------- page setup ---------- */
+$('demoNotice').hidden = LIVE || Boolean(CONFIG_ERROR);
+if (CONFIG_ERROR) showError(CONFIG_ERROR);
+$('year').textContent = new Date().getFullYear();
+const mb = $('menuBtn'), menu = $('menu');
+mb.addEventListener('click', () => mb.setAttribute('aria-expanded', menu.classList.toggle('open')));
+</script>
+</body>
+</html>

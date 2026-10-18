@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Ananga — Welcome</title>
+<meta name="description" content="Hotel Ananga: calm, comfortable rooms, warm service and easy online booking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1f2a27; --muted:#5d6b66; --paper:#faf7f1; --sand:#efe7d8; --line:#e2d8c6;
+    --forest:#1e4d43; --forest-dark:#153a32; --brass:#b08a4a; --white:#fff;
+    --radius:14px; --max:1180px;
+    --serif:"Cormorant Garamond", Georgia, serif; --sans:"Inter", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.65;font-size:16px}
+  img,video{display:block;max-width:100%}
+  a{color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;letter-spacing:.2px}
+  .eyebrow{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);font-weight:600}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:50;background:rgba(250,247,241,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{font-family:var(--serif);font-size:1.6rem;font-weight:700;text-decoration:none;color:var(--forest);letter-spacing:.5px}
+  .brand span{color:var(--brass)}
+  nav ul{list-style:none;display:flex;gap:28px;align-items:center}
+  nav a{text-decoration:none;font-size:.95rem;color:var(--muted);font-weight:500}
+  nav a:hover,nav a[aria-current="page"]{color:var(--forest)}
+  .btn{display:inline-block;background:var(--forest);color:var(--white)!important;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.95rem;border:0;cursor:pointer;transition:background .2s}
+  .btn:hover{background:var(--forest-dark)}
+  .btn.ghost{background:transparent;border:1.5px solid var(--white);}
+  .btn.ghost:hover{background:rgba(255,255,255,.12)}
+  .menu-toggle{display:none;background:none;border:0;font-size:1.6rem;color:var(--forest);cursor:pointer}
+
+  /* Media slots: show a tidy placeholder until the real photo is in /graph */
+  .media{position:relative;background:linear-gradient(135deg,#d9cdb6,#c7b89c);overflow:hidden;border-radius:var(--radius)}
+  .media::after{content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:.85rem;letter-spacing:.06em;color:rgba(31,42,39,.55);font-weight:500}
+  .media img,.media video{position:relative;z-index:1;width:100%;height:100%;object-fit:cover}
+
+  /* Hero */
+  .hero{position:relative;min-height:84vh;display:flex;align-items:flex-end;color:var(--white)}
+  .hero .media{position:absolute;inset:0;border-radius:0;background:linear-gradient(135deg,#2a5a4f,#14362f)}
+  .hero .media::after{color:rgba(255,255,255,.35);align-items:flex-start;padding-top:110px}
+  .hero::before{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(to top,rgba(10,25,22,.78) 0%,rgba(10,25,22,.25) 55%,rgba(10,25,22,.1) 100%)}
+  .hero-content{position:relative;z-index:3;padding:0 0 88px;max-width:720px}
+  .hero h1{font-size:clamp(2.6rem,6vw,4.6rem);margin:12px 0 18px}
+  .hero p{font-size:1.15rem;opacity:.92;max-width:560px;margin-bottom:30px}
+  .hero .eyebrow{color:#e3c995}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+
+  /* Sections */
+  section{padding:96px 0}
+  .section-head{max-width:640px;margin-bottom:48px}
+  .section-head h2{font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 14px}
+  .section-head p{color:var(--muted)}
+
+  .about{display:grid;grid-template-columns:1.05fr 1fr;gap:64px;align-items:center}
+  .about .media{aspect-ratio:4/5}
+  .about p{color:var(--muted);margin-bottom:16px}
+  .stats{display:flex;gap:40px;margin-top:28px;padding-top:28px;border-top:1px solid var(--line)}
+  .stats strong{display:block;font-family:var(--serif);font-size:2.2rem;color:var(--forest);line-height:1}
+  .stats span{font-size:.85rem;color:var(--muted)}
+
+  .facilities{background:var(--sand)}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+  .card .media{aspect-ratio:3/2;border-radius:0}
+  .card-body{padding:24px}
+  .card h3{font-size:1.5rem;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:.95rem}
+
+  .rooms-list{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  .room{display:grid;grid-template-columns:1fr 1.1fr;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .room .media{border-radius:0;min-height:220px}
+  .room .card-body{display:flex;flex-direction:column}
+  .room .meta{font-size:.85rem;color:var(--muted);margin:4px 0 12px}
+  .room .price{margin-top:auto;padding-top:14px;font-weight:600;color:var(--forest)}
+  .room .price small{font-weight:400;color:var(--muted)}
+  .center{text-align:center;margin-top:44px}
+
+  .video-band{background:var(--forest);color:var(--white)}
+  .video-band .section-head p{color:rgba(255,255,255,.75)}
+  .video-band .media{aspect-ratio:16/9;background:linear-gradient(135deg,#2a5a4f,#183f37)}
+  .video-band .media::after{color:rgba(255,255,255,.45)}
+
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:200px;gap:14px}
+  .gallery .media:nth-child(1){grid-column:span 2;grid-row:span 2}
+  .gallery .media:nth-child(4){grid-row:span 2}
+
+  .contact{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+  .contact dl{display:grid;grid-template-columns:120px 1fr;gap:14px 20px}
+  .contact dt{font-weight:600;color:var(--forest)}
+  .contact dd{color:var(--muted)}
+  .map.media{min-height:300px}
+
+  .cta{background:var(--sand);text-align:center}
+  .cta h2{font-size:clamp(2rem,4vw,2.8rem);margin-bottom:12px}
+  .cta p{color:var(--muted);margin-bottom:28px}
+
+  footer{background:var(--forest-dark);color:rgba(255,255,255,.75);padding:48px 0;font-size:.9rem}
+  .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:center}
+  footer .brand{color:var(--white)}
+  footer a{text-decoration:none}
+  footer a:hover{color:var(--white)}
+  footer ul{list-style:none;display:flex;gap:22px}
+
+  @media (max-width:900px){
+    .about,.contact{grid-template-columns:1fr;gap:36px}
+    .grid-3,.rooms-list{grid-template-columns:1fr}
+    .gallery{grid-template-columns:repeat(2,1fr);grid-auto-rows:150px}
+    .gallery .media:nth-child(4){grid-row:auto}
+    section{padding:72px 0}
+  }
+  @media (max-width:720px){
+    .wrap{padding:0 16px}
+    .menu-toggle{display:block}
+    nav ul{display:none;position:absolute;top:72px;left:0;right:0;flex-direction:column;align-items:flex-start;gap:0;background:var(--paper);border-bottom:1px solid var(--line);padding:8px 16px 16px}
+    nav ul.open{display:flex}
+    nav li{width:100%;padding:10px 0}
+    .room{grid-template-columns:1fr}
+    .room .media{min-height:200px}
+    .stats{gap:24px}
+    .contact dl{grid-template-columns:1fr;gap:4px}
+    .contact dd{margin-bottom:12px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
+    <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" id="menuBtn">&#9776;</button>
+    <nav>
+      <ul id="menu">
+        <li><a href="index.html" aria-current="page">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#facilities">Facilities</a></li>
+        <li><a href="#rooms">Rooms</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a class="btn" href="booking.html">Book a Stay</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO: put graph/hero.jpg (or a short graph/hero.mp4) in the graph folder -->
+<section class="hero" style="padding:0">
+  <div class="media" data-label="Hero photo — graph/hero.jpg">
+    <img src="graph/hero.jpg" alt="Hotel Ananga entrance" onerror="this.remove()">
+  </div>
+  <div class="wrap hero-content">
+    <div class="eyebrow">Welcome to Hotel Ananga</div>
+    <h1>A calm place to arrive, rest and feel at home.</h1>
+    <p>Comfortable rooms, attentive service and a peaceful setting, whether you are here for business, family or a well-earned break.</p>
+    <div class="hero-actions">
+      <a class="btn" href="booking.html">Check Availability</a>
+      <a class="btn ghost" href="#rooms">View Rooms</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="wrap about">
+    <div class="media" data-label="Lobby or exterior photo — graph/about.jpg">
+      <img src="graph/about.jpg" alt="Hotel Ananga lobby" onerror="this.remove()">
+    </div>
+    <div>
+      <div class="eyebrow">Our Story</div>
+      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 18px">Hospitality, simply done well.</h2>
+      <p>Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.</p>
+      <p>We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.</p>
+      <div class="stats">
+        <div><strong>4</strong><span>Room types</span></div>
+        <div><strong>24/7</strong><span>Reception</span></div>
+        <div><strong>Online</strong><span>Instant booking</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FACILITIES -->
+<section id="facilities" class="facilities">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Facilities</div>
+      <h2>Everything you need for a comfortable stay</h2>
+      <p>From your first coffee to a quiet evening, our facilities are designed around your comfort.</p>
+    </div>
+    <div class="grid-3">
+      <article class="card">
+        <div class="media" data-label="Restaurant photo — graph/restaurant.jpg"><img src="graph/restaurant.jpg" alt="Restaurant" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Restaurant</h3><p>Fresh breakfast every morning and a relaxed dining room serving local and international dishes.</p></div>
+      </article>
+      <article class="card">
+        <div class="media" data-label="Garden or terrace photo — graph/garden.jpg"><img src="graph/garden.jpg" alt="Garden terrace" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Garden &amp; Terrace</h3><p>A quiet outdoor space to unwind, read or enjoy the evening air.</p></div>
+      </article>
+      <article class="card">
+        <div class="media" data-label="Meeting room photo — graph/meeting.jpg"><img src="graph/meeting.jpg" alt="Meeting room" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Meetings &amp; Events</h3><p>A flexible room for meetings, workshops and small celebrations, with Wi-Fi and projector.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ROOMS PREVIEW -->
+<section id="rooms">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Rooms</div>
+      <h2>Choose the room that suits your stay</h2>
+      <p>All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.</p>
+    </div>
+    <div class="rooms-list">
+      <article class="room">
+        <div class="media" data-label="graph/room-standard.jpg"><img src="graph/room-standard.jpg" alt="Standard Room" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Standard Room</h3><div class="meta">Up to 2 guests · Queen bed</div><p>A calm, well-appointed room with a work desk and en-suite shower.</p><div class="price">from MZN 3,500 <small>/ night</small></div></div>
+      </article>
+      <article class="room">
+        <div class="media" data-label="graph/room-deluxe.jpg"><img src="graph/room-deluxe.jpg" alt="Deluxe Room" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Deluxe Room</h3><div class="meta">Up to 2 guests · King bed</div><p>More space and natural light, with a seating area and garden view.</p><div class="price">from MZN 4,800 <small>/ night</small></div></div>
+      </article>
+      <article class="room">
+        <div class="media" data-label="graph/room-family.jpg"><img src="graph/room-family.jpg" alt="Family Room" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Family Room</h3><div class="meta">Up to 4 guests · King + 2 singles</div><p>Two connected sleeping areas, ideal for families travelling together.</p><div class="price">from MZN 6,500 <small>/ night</small></div></div>
+      </article>
+      <article class="room">
+        <div class="media" data-label="graph/room-suite.jpg"><img src="graph/room-suite.jpg" alt="Ananga Suite" onerror="this.remove()"></div>
+        <div class="card-body"><h3>Ananga Suite</h3><div class="meta">Up to 2 guests · King bed · Balcony</div><p>Our finest room, with a separate living area, bathtub and private balcony.</p><div class="price">from MZN 9,500 <small>/ night</small></div></div>
+      </article>
+    </div>
+    <div class="center"><a class="btn" href="booking.html">See Availability &amp; Book</a></div>
+  </div>
+</section>
+
+<!-- VIDEO: add graph/hotel-tour.mp4 later -->
+<section class="video-band">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow" style="color:#e3c995">Take a Look Around</div>
+      <h2>Hotel tour</h2>
+      <p>A short film of our rooms, spaces and surroundings.</p>
+    </div>
+    <div class="media" data-label="Hotel tour video — graph/hotel-tour.mp4">
+      <video controls preload="metadata" poster="graph/video-poster.jpg" onerror="this.remove()">
+        <source src="graph/hotel-tour.mp4" type="video/mp4" onerror="this.parentElement.remove()">
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Gallery</div>
+      <h2>Moments at Ananga</h2>
+    </div>
+    <div class="gallery">
+      <div class="media" data-label="graph/gallery-1.jpg"><img src="graph/gallery-1.jpg" alt="Hotel gallery photo 1" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-2.jpg"><img src="graph/gallery-2.jpg" alt="Hotel gallery photo 2" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-3.jpg"><img src="graph/gallery-3.jpg" alt="Hotel gallery photo 3" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-4.jpg"><img src="graph/gallery-4.jpg" alt="Hotel gallery photo 4" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-5.jpg"><img src="graph/gallery-5.jpg" alt="Hotel gallery photo 5" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-6.jpg"><img src="graph/gallery-6.jpg" alt="Hotel gallery photo 6" onerror="this.remove()"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="padding-top:0">
+  <div class="wrap contact">
+    <div>
+      <div class="eyebrow">Contact &amp; Location</div>
+      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 24px">We look forward to welcoming you</h2>
+      <dl>
+        <dt>Address</dt><dd>[Street address, city — to be added]</dd>
+        <dt>Phone</dt><dd>[+258 phone number — to be added]</dd>
+        <dt>Email</dt><dd>[reservations email — to be added]</dd>
+        <dt>Check-in</dt><dd>From 14:00</dd>
+        <dt>Check-out</dt><dd>Until 11:00</dd>
+      </dl>
+    </div>
+    <div class="map media" data-label="Map or location photo — graph/location.jpg">
+      <img src="graph/location.jpg" alt="Hotel location" onerror="this.remove()">
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Ready to plan your stay?</h2>
+    <p>Check live availability and reserve your room in a few minutes.</p>
+    <a class="btn" href="booking.html">Book Now</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="index.html">Hotel <span style="color:var(--brass)">Ananga</span></a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="booking.html">Rooms &amp; Booking</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div>&copy; <span id="year"></span> Hotel Ananga. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const btn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
+  btn.addEventListener('click', () => {
+    const open = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+  });
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+</script>
+</body>
+</html>

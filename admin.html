@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Staff — Hotel Ananga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1f2a27; --muted:#5d6b66; --paper:#faf7f1; --sand:#efe7d8; --line:#e2d8c6;
+    --forest:#1e4d43; --forest-dark:#153a32; --brass:#b08a4a; --white:#fff;
+    --danger:#a23b2a; --ok:#2f6b4f; --warn:#8a6420; --info:#2b5c84;
+    --radius:12px;
+    --serif:"Cormorant Garamond", Georgia, serif; --sans:"Inter", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.5;font-size:15px}
+  [hidden]{display:none!important}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--forest);color:var(--white);padding:10px 18px;border-radius:999px;border:0;font-weight:600;font-size:.9rem;transition:background .2s,opacity .2s;text-decoration:none}
+  .btn:hover{background:var(--forest-dark)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.light{background:var(--white);color:var(--forest);border:1.5px solid var(--forest)}
+  .btn.light:hover{background:var(--sand)}
+  .btn.danger{background:var(--white);color:var(--danger);border:1.5px solid #e2b9b0}
+  .btn.danger:hover{background:#f8e6e2}
+  .btn.small{padding:7px 14px;font-size:.85rem}
+
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--white)}
+  .lang button{border:0;background:transparent;padding:6px 12px;font-size:.8rem;font-weight:600;color:var(--muted)}
+  .lang button.on{background:var(--forest);color:var(--white)}
+
+  .notice{padding:12px 16px;border-radius:10px;font-size:.9rem;margin-bottom:16px}
+  .notice.error{background:#f8e6e2;border:1px solid #ebc4bb;color:var(--danger)}
+  .notice.demo{background:#fbf1dc;border:1px solid #ecd6a6;color:#6b5320}
+  .notice.ok{background:#e3efe8;border:1px solid #bcd8c8;color:var(--ok)}
+
+  /* Login */
+  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:linear-gradient(160deg,var(--forest) 0%,var(--forest-dark) 100%)}
+  .login-card{background:var(--paper);border-radius:16px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
+  .login-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .brand{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--forest);text-decoration:none}
+  .brand span{color:var(--brass)}
+  .login-card h1{font-size:1.9rem;margin-bottom:6px}
+  .login-card p.sub{color:var(--muted);font-size:.9rem;margin-bottom:22px}
+  .login-card form > div{margin-bottom:14px}
+  .login-card .btn{width:100%;margin-top:6px;padding:12px}
+  .login-card .back{display:block;text-align:center;margin-top:18px;font-size:.85rem;color:var(--muted)}
+
+  /* App shell */
+  .topbar{background:var(--forest-dark);color:var(--white);position:sticky;top:0;z-index:30}
+  .topbar .inner{max-width:1400px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar .brand{color:var(--white);font-size:1.35rem}
+  .topbar .brand small{font-family:var(--sans);font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#e3c995;margin-left:8px}
+  .topbar .right{display:flex;align-items:center;gap:12px;font-size:.88rem}
+  .topbar .who{opacity:.8}
+  .topbar .lang{border-color:rgba(255,255,255,.25);background:transparent}
+  .topbar .lang button{color:rgba(255,255,255,.75)}
+  .topbar .lang button.on{background:var(--white);color:var(--forest-dark)}
+  .topbar .signout{background:transparent;border:1px solid rgba(255,255,255,.35);color:var(--white);border-radius:999px;padding:6px 14px;font-size:.85rem}
+  .topbar .signout:hover{background:rgba(255,255,255,.1)}
+
+  main{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+  .head h1{font-size:2rem}
+  .head .date{color:var(--muted);font-size:.9rem}
+
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+  .stat{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;text-align:left;border-left:4px solid var(--line);transition:box-shadow .2s}
+  .stat:hover{box-shadow:0 6px 18px -10px rgba(20,50,42,.35)}
+  .stat .n{font-family:var(--serif);font-size:2rem;font-weight:700;line-height:1;color:var(--forest)}
+  .stat .l{font-size:.8rem;color:var(--muted);margin-top:6px}
+  .stat.arr{border-left-color:var(--info)} .stat.dep{border-left-color:var(--brass)}
+  .stat.inh{border-left-color:var(--ok)} .stat.pen{border-left-color:var(--warn)} .stat.bal{border-left-color:var(--danger)}
+  .stat.bal .n{font-size:1.45rem;padding-top:6px}
+
+  .toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--line);background:var(--white);padding:7px 14px;border-radius:999px;font-size:.84rem;color:var(--muted);font-weight:500}
+  .tabs button.on{background:var(--forest);border-color:var(--forest);color:var(--white)}
+  .tabs .c{opacity:.7;margin-left:4px;font-size:.78rem}
+  .search{display:flex;gap:8px;align-items:center;min-width:280px}
+  .search input{padding:8px 12px}
+
+  .table-wrap{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th{text-align:left;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:12px 14px;border-bottom:1px solid var(--line);background:#fcfaf6;white-space:nowrap}
+  td{padding:12px 14px;border-bottom:1px solid #f0e9dc;vertical-align:top}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#fbf8f2}
+  tbody tr:last-child td{border-bottom:0}
+  td .ref{font-family:ui-monospace,Menlo,monospace;font-weight:600;font-size:.84rem}
+  td .sub{color:var(--muted);font-size:.8rem}
+  .num{text-align:right;white-space:nowrap}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+
+  .pill{display:inline-block;font-size:.74rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .s-pending{background:#fbf1dc;color:var(--warn)}
+  .s-confirmed{background:#e1ebf3;color:var(--info)}
+  .s-checked_in{background:#e3efe8;color:var(--ok)}
+  .s-checked_out{background:#eceae6;color:#6a6862}
+  .s-cancelled{background:#f2e3df;color:var(--danger)}
+  .p-paid{color:var(--ok);font-weight:600}
+  .p-part{color:var(--warn);font-weight:600}
+  .p-none{color:var(--danger);font-weight:600}
+
+  /* Mobile cards instead of table */
+  .cards{display:none}
+  .bcard{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer}
+  .bcard .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .bcard h3{font-family:var(--sans);font-size:1rem;font-weight:600}
+  .bcard .sub{color:var(--muted);font-size:.84rem;margin-top:4px}
+
+  /* Drawer */
+  .overlay{position:fixed;inset:0;background:rgba(15,30,26,.45);z-index:40}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--paper);z-index:41;overflow-y:auto;box-shadow:-20px 0 50px -20px rgba(0,0,0,.4)}
+  .drawer header{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:18px 22px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:2}
+  .drawer header h2{font-size:1.6rem}
+  .drawer header .ref{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:.85rem;margin-top:2px}
+  .x{background:none;border:0;font-size:1.6rem;color:var(--muted);line-height:1;padding:2px 6px}
+  .drawer .body{padding:20px 22px}
+  .block{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+  .block h3{font-family:var(--sans);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  dl.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:.9rem}
+  dl.kv dt{color:var(--muted)}
+  dl.kv dd a{color:var(--forest)}
+  .money{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-bottom:14px}
+  .money div{background:var(--paper);border-radius:9px;padding:10px 6px}
+  .money b{display:block;font-size:1.05rem}
+  .money span{font-size:.75rem;color:var(--muted)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px}
+  .plist{list-style:none;margin-bottom:14px;font-size:.88rem}
+  .plist li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .plist li:last-child{border-bottom:0}
+  .plist .sub{color:var(--muted);font-size:.78rem}
+  .pform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pform .full{grid-column:1/-1}
+  .msg{font-size:.85rem;margin-top:10px}
+  .msg.err{color:var(--danger)} .msg.ok{color:var(--ok)}
+
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width:1050px){ .stats{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:760px){
+    main{padding:18px 14px 50px}
+    .topbar .inner{padding:0 14px}
+    .topbar .who{display:none}
+    .topbar .brand small{display:none}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat.bal{grid-column:1/-1}
+    .table-wrap{display:none}
+    .cards{display:block}
+    .search{min-width:0;width:100%}
+    .tabs{overflow-x:auto;flex-wrap:nowrap;width:100%;padding-bottom:4px}
+    .tabs button{flex:0 0 auto}
+    dl.kv{grid-template-columns:1fr}
+    dl.kv dt{margin-top:4px}
+    .pform{grid-template-columns:1fr}
+    .login-card{padding:28px 22px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<section class="login" id="loginView" hidden>
+  <div class="login-card">
+    <div class="top">
+      <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
+      <div class="lang" data-lang-switch></div>
+    </div>
+    <h1 data-i18n="loginTitle">Staff sign in</h1>
+    <p class="sub" data-i18n="loginSub">For hotel staff only.</p>
+    <div class="notice demo" id="loginDemo" hidden data-i18n="demoLogin">Demo mode: the database is not connected. Enter any email and password to preview the staff page with sample bookings.</div>
+    <div class="notice error" id="loginError" hidden></div>
+    <form id="loginForm" novalidate>
+      <div><label for="email" data-i18n="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div><label for="password" data-i18n="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit" id="loginBtn" data-i18n="signIn">Sign in</button>
+    </form>
+    <a class="back" href="index.html" data-i18n="backToSite">← Back to website</a>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="appView" hidden>
+  <div class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html">Hotel <span>Ananga</span><small data-i18n="staffArea">Staff</small></a>
+      <div class="right">
+        <span class="who" id="whoAmI"></span>
+        <div class="lang" data-lang-switch></div>
+        <button class="signout" id="signOutBtn" data-i18n="signOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="notice demo" id="appDemo" hidden data-i18n="demoApp">Demo mode: sample bookings only. Changes are not saved.</div>
+    <div class="notice error" id="appError" hidden></div>
+
+    <div class="head">
+      <div>
+        <h1 data-i18n="bookings">Bookings</h1>
+        <div class="date" id="todayLabel"></div>
+      </div>
+      <button class="btn light small" id="refreshBtn" data-i18n="refresh">Refresh</button>
+    </div>
+
+    <div class="stats">
+      <button class="stat arr" data-tab="arrivals"><div class="n" id="stArr">0</div><div class="l" data-i18n="arrivalsToday">Arrivals today</div></button>
+      <button class="stat dep" data-tab="departures"><div class="n" id="stDep">0</div><div class="l" data-i18n="departuresToday">Departures today</div></button>
+      <button class="stat inh" data-tab="inhouse"><div class="n" id="stIn">0</div><div class="l" data-i18n="inHouse">In house</div></button>
+      <button class="stat pen" data-tab="pending"><div class="n" id="stPen">0</div><div class="l" data-i18n="toConfirm">Awaiting confirmation</div></button>
+      <button class="stat bal" data-tab="unpaid"><div class="n" id="stBal">0</div><div class="l" data-i18n="balanceDue">Balance due (active bookings)</div></button>
+    </div>
+
+    <div class="toolbar">
+      <div class="tabs" id="tabs"></div>
+      <div class="search"><input id="search" type="search" data-i18n-ph="searchPh" placeholder="Search name, reference, phone…"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th data-i18n="colRef">Reference</th><th data-i18n="colGuest">Guest</th><th data-i18n="colRoom">Room</th>
+          <th data-i18n="colStay">Stay</th><th class="num" data-i18n="colTotal">Total</th><th class="num" data-i18n="colPaid">Paid</th>
+          <th data-i18n="colPayment">Payment</th><th data-i18n="colStatus">Status</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="cards" id="cards"></div>
+  </main>
+</div>
+
+<!-- ============ BOOKING DRAWER ============ -->
+<div class="overlay" id="overlay" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog">
+  <header>
+    <div><h2 id="dName"></h2><div class="ref" id="dRef"></div></div>
+    <button class="x" id="closeDrawer" aria-label="Close">&times;</button>
+  </header>
+  <div class="body">
+    <div class="block">
+      <h3 data-i18n="status">Status</h3>
+      <div style="margin-bottom:12px"><span class="pill" id="dStatus"></span></div>
+      <div class="actions" id="dActions"></div>
+      <div class="msg" id="statusMsg"></div>
+    </div>
+    <div class="block">
+      <h3 data-i18n="stay">Stay</h3>
+      <dl class="kv" id="dStay"></dl>
+    </div>
+    <div class="block">
+      <h3 data-i18n="guest">Guest</h3>
+      <dl class="kv" id="dGuest"></dl>
+    </div>
+    <div class="block">
+      <h3 data-i18n="payments">Payments</h3>
+      <div class="money">
+        <div><b id="dTotal"></b><span data-i18n="total">Total</span></div>
+        <div><b id="dPaid"></b><span data-i18n="paid">Paid</span></div>
+        <div><b id="dBal"></b><span data-i18n="balance">Balance</span></div>
+      </div>
+      <ul class="plist" id="dPayments"></ul>
+      <form class="pform" id="payForm" novalidate>
+        <div><label for="pType" data-i18n="type">Type</label>
+          <select id="pType"><option value="pay" data-i18n="typePay">Payment</option><option value="refund" data-i18n="typeRefund">Refund</option></select></div>
+        <div><label for="pAmount" data-i18n="amount">Amount</label><input id="pAmount" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div><label for="pMethod" data-i18n="method">Method</label><select id="pMethod"></select></div>
+        <div><label for="pTxn" data-i18n="txnRef">Transaction ID</label><input id="pTxn" maxlength="60" data-i18n-ph="txnPh" placeholder="e.g. M-Pesa code"></div>
+        <div class="full"><label for="pNotes" data-i18n="notesOpt">Notes (optional)</label><input id="pNotes" maxlength="500"></div>
+        <div class="full"><button class="btn" type="submit" id="payBtn" data-i18n="recordPayment">Record payment</button></div>
+      </form>
+      <div class="msg" id="payMsg"></div>
+    </div>
+  </div>
+</aside>
+
+<script>
+/* =========================================================
+   CONFIGURATION — same values as in booking.html.
+   Only the PUBLIC anon/publishable key goes here.
+   ========================================================= */
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_SgfLDZBPbMAigv68xckWMw_1K9Gouwm';
+
+/* ---------- Languages ---------- */
+const I18N = {
+  en: {
+    loginTitle:'Staff sign in', loginSub:'For hotel staff only.', email:'Email', password:'Password', signIn:'Sign in',
+    backToSite:'← Back to website', staffArea:'Staff', signOut:'Sign out', bookings:'Bookings', refresh:'Refresh',
+    demoLogin:'Demo mode: the database is not connected. Enter any email and password to preview the staff page with sample bookings.',
+    demoApp:'Demo mode: sample bookings only. Changes are not saved.',
+    arrivalsToday:'Arrivals today', departuresToday:'Departures today', inHouse:'In house', toConfirm:'Awaiting confirmation',
+    balanceDue:'Balance due (active bookings)', searchPh:'Search name, reference, phone…',
+    colRef:'Reference', colGuest:'Guest', colRoom:'Room', colStay:'Stay', colTotal:'Total', colPaid:'Paid', colPayment:'Payment', colStatus:'Status',
+    tab_upcoming:'Upcoming', tab_arrivals:'Arrivals today', tab_departures:'Departures today', tab_inhouse:'In house',
+    tab_pending:'To confirm', tab_unpaid:'Unpaid', tab_past:'Past', tab_cancelled:'Cancelled', tab_all:'All',
+    status:'Status', stay:'Stay', guest:'Guest', payments:'Payments', total:'Total', paid:'Paid', balance:'Balance',
+    type:'Type', typePay:'Payment', typeRefund:'Refund', amount:'Amount', method:'Method', txnRef:'Transaction ID',
+    txnPh:'e.g. M-Pesa code', notesOpt:'Notes (optional)', recordPayment:'Record payment',
+    room:'Room', checkIn:'Check-in', checkOut:'Check-out', nights:'Nights', guests:'Guests', booked:'Booked on',
+    name:'Name', phone:'Phone', requests:'Requests', prefMethod:'Preferred payment',
+    st_pending:'Pending', st_confirmed:'Confirmed', st_checked_in:'Checked in', st_checked_out:'Checked out', st_cancelled:'Cancelled',
+    act_confirm:'Confirm booking', act_check_in:'Check in', act_check_out:'Check out', act_cancel:'Cancel booking',
+    pm_cash:'Cash', pm_card:'Card', pm_mpesa:'M-Pesa', pm_emola:'e-Mola', pm_mkesh:'mKesh', pm_bank_transfer:'Bank transfer',
+    noBookings:'No bookings to show.', noPayments:'No payments recorded yet.', fullyPaid:'Paid in full',
+    unpaid:'Unpaid', partPaid:'Part paid', noShowCancel:'Cancel this booking? The room will become available again.',
+    checkoutBalance:'This guest still owes {amount}. Check out anyway?',
+    statusSaved:'Status updated.', paymentSaved:'Payment recorded.', refundSaved:'Refund recorded.',
+    enterAmount:'Enter an amount greater than zero.', notStaff:'This account is not registered as hotel staff.',
+    badLogin:'Wrong email or password.', loadFail:'Could not load bookings. Check your connection and try again.',
+    genericError:'Something went wrong. Please try again.', by:'by', today:'Today',
+    nightsShort:'{n} night(s)', guestsShort:'{n} guest(s)',
+    errOver:'This would be more than the booking total.', errRefund:'Refund is larger than the amount paid.', errAuth:'You are not authorized. Please sign in again.'
+  },
+  pt: {
+    loginTitle:'Acesso da equipa', loginSub:'Apenas para funcionários do hotel.', email:'Email', password:'Palavra-passe', signIn:'Entrar',
+    backToSite:'← Voltar ao site', staffArea:'Equipa', signOut:'Sair', bookings:'Reservas', refresh:'Atualizar',
+    demoLogin:'Modo de demonstração: a base de dados não está ligada. Introduza qualquer email e palavra-passe para ver a página com reservas de exemplo.',
+    demoApp:'Modo de demonstração: apenas reservas de exemplo. As alterações não são guardadas.',
+    arrivalsToday:'Chegadas hoje', departuresToday:'Saídas hoje', inHouse:'Hospedados', toConfirm:'Por confirmar',
+    balanceDue:'Saldo em dívida (reservas ativas)', searchPh:'Pesquisar nome, referência, telefone…',
+    colRef:'Referência', colGuest:'Hóspede', colRoom:'Quarto', colStay:'Estadia', colTotal:'Total', colPaid:'Pago', colPayment:'Pagamento', colStatus:'Estado',
+    tab_upcoming:'Próximas', tab_arrivals:'Chegadas hoje', tab_departures:'Saídas hoje', tab_inhouse:'Hospedados',
+    tab_pending:'Por confirmar', tab_unpaid:'Por pagar', tab_past:'Anteriores', tab_cancelled:'Canceladas', tab_all:'Todas',
+    status:'Estado', stay:'Estadia', guest:'Hóspede', payments:'Pagamentos', total:'Total', paid:'Pago', balance:'Saldo',
+    type:'Tipo', typePay:'Pagamento', typeRefund:'Reembolso', amount:'Valor', method:'Método', txnRef:'ID da transação',
+    txnPh:'ex.: código M-Pesa', notesOpt:'Notas (opcional)', recordPayment:'Registar pagamento',
+    room:'Quarto', checkIn:'Entrada', checkOut:'Saída', nights:'Noites', guests:'Hóspedes', booked:'Reservado em',
+    name:'Nome', phone:'Telefone', requests:'Pedidos', prefMethod:'Pagamento preferido',
+    st_pending:'Pendente', st_confirmed:'Confirmada', st_checked_in:'Check-in feito', st_checked_out:'Check-out feito', st_cancelled:'Cancelada',
+    act_confirm:'Confirmar reserva', act_check_in:'Fazer check-in', act_check_out:'Fazer check-out', act_cancel:'Cancelar reserva',
+    pm_cash:'Numerário', pm_card:'Cartão', pm_mpesa:'M-Pesa', pm_emola:'e-Mola', pm_mkesh:'mKesh', pm_bank_transfer:'Transferência bancária',
+    noBookings:'Não há reservas para mostrar.', noPayments:'Ainda não há pagamentos registados.', fullyPaid:'Pago na totalidade',
+    unpaid:'Por pagar', partPaid:'Pago em parte', noShowCancel:'Cancelar esta reserva? O quarto ficará novamente disponível.',
+    checkoutBalance:'Este hóspede ainda deve {amount}. Fazer check-out mesmo assim?',
+    statusSaved:'Estado atualizado.', paymentSaved:'Pagamento registado.', refundSaved:'Reembolso registado.',
+    enterAmount:'Introduza um valor maior que zero.', notStaff:'Esta conta não está registada como funcionário do hotel.',
+    badLogin:'Email ou palavra-passe incorretos.', loadFail:'Não foi possível carregar as reservas. Verifique a ligação e tente novamente.',
+    genericError:'Algo correu mal. Tente novamente.', by:'por', today:'Hoje',
+    nightsShort:'{n} noite(s)', guestsShort:'{n} hóspede(s)',
+    errOver:'Isto ultrapassaria o total da reserva.', errRefund:'O reembolso é maior do que o valor pago.', errAuth:'Não tem autorização. Inicie sessão novamente.'
+  }
+};
+const LANG_KEY = 'ananga-lang';
+let lang = (() => { try { return localStorage.getItem(LANG_KEY) } catch(e) { return null } })()
+        || ((navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+const t = (k, vars) => { let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+  if (vars) for (const v in vars) s = s.replace('{' + v + '}', vars[v]); return s; };
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll('[data-lang-switch]').forEach(box => {
+    box.innerHTML = ['en','pt'].map(l => `<button type="button" data-l="${l}" class="${l===lang?'on':''}">${l.toUpperCase()}</button>`).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = () => setLang(b.dataset.l));
+  });
+  fillMethodSelect();
+  if (bookings.length) render();
+  if (current) openDrawer(current.reference, true);
+  $('todayLabel').textContent = t('today') + ': ' + fmtDate(TODAY, true);
+}
+function setLang(l){ lang = l; try { localStorage.setItem(LANG_KEY, l) } catch(e) {} applyLang(); }
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localISO = d => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const TODAY = localISO(new Date());
+const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return localISO(d); };
+const locale = () => lang === 'pt' ? 'pt-PT' : 'en-GB';
+const fmtDate = (s, long) => new Date(s + 'T12:00:00').toLocaleDateString(locale(),
+  long ? {weekday:'long', day:'numeric', month:'long', year:'numeric'} : {day:'numeric', month:'short'});
+const money = (n, cur='MZN') => cur + ' ' + Number(n || 0).toLocaleString(locale(), {minimumFractionDigits:0, maximumFractionDigits:2});
+const METHODS = ['cash','card','mpesa','emola','mkesh','bank_transfer'];
+const ACTIVE = ['pending','confirmed','checked_in'];
+
+/* ---------- Data layer (live Supabase or demo) ---------- */
+let CONFIG_ERROR = '', BASE_URL = '';
+if (SUPABASE_URL) {
+  try { const u = new URL(SUPABASE_URL.trim()); BASE_URL = u.origin;
+        if (!/\.supabase\.co$/.test(u.hostname)) CONFIG_ERROR = 'SUPABASE_URL must look like https://xxxx.supabase.co'; }
+  catch(e) { CONFIG_ERROR = 'SUPABASE_URL is not a valid web address.'; }
+}
+const LIVE = Boolean(BASE_URL && SUPABASE_ANON_KEY && window.supabase && !CONFIG_ERROR);
+const sb = LIVE ? window.supabase.createClient(BASE_URL, SUPABASE_ANON_KEY.trim()) : null;
+
+const api = LIVE ? {
+  async session(){ const { data } = await sb.auth.getSession(); return data.session; },
+  async signIn(email, password){
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw Object.assign(new Error(t('badLogin')), { friendly:true });
+    return data.session;
+  },
+  async isStaff(){ const { data, error } = await sb.rpc('is_staff'); if (error) throw error; return data === true; },
+  async signOut(){ await sb.auth.signOut(); },
+  async list(){ const { data, error } = await sb.rpc('staff_bookings', { p_from:null, p_to:null }); if (error) throw error; return data; },
+  async payments(ref){ const { data, error } = await sb.rpc('staff_payments', { p_reference: ref }); if (error) throw error; return data; },
+  async setStatus(ref, status){ const { error } = await sb.rpc('update_booking_status', { p_reference: ref, p_status: status }); if (error) throw error; },
+  async pay(ref, amount, method, txn, notes){
+    const { error } = await sb.rpc('record_payment', { p_reference: ref, p_amount: amount, p_method: method, p_transaction_ref: txn || null, p_notes: notes || null });
+    if (error) throw error;
+  }
+} : demoApi();
+
+function demoApi(){
+  const mk = (ref, name, email, phone, room, inOff, nights, guests, total, paid, method, status, notes) => ({
+    id: ref, reference: ref, guest_name: name, email, phone, room_name: room,
+    check_in: addDays(TODAY, inOff), check_out: addDays(TODAY, inOff + nights), nights, guests,
+    total_price: total, amount_paid: paid, currency: 'MZN', payment_method: method, status, notes,
+    created_at: new Date(Date.now() - 86400000 * 3).toISOString() });
+  const rows = [
+    mk('HA-3F8A21','Ana Machava','ana.m@example.com','+258 84 123 4567','Deluxe Room',0,2,2,9600,4800,'mpesa','confirmed','Arriving around 18:00'),
+    mk('HA-B71C04','João Sitoe','joao@example.com','+258 82 555 0101','Standard Room',0,1,1,3500,0,'cash','pending',null),
+    mk('HA-9D2E77','Wang Li','wang.li@example.com','+886 912 345 678','Ananga Suite',-2,3,2,28500,28500,'card','checked_in','Airport pickup please'),
+    mk('HA-41AA9C','Maria Cossa','maria@example.com','+258 86 777 2020','Family Room',-3,3,4,19500,10000,'emola','checked_in',null),
+    mk('HA-C0FFEE','Pedro Nhantumbo','pedro@example.com','+258 84 222 3333','Standard Room',3,2,2,7000,0,'bank_transfer','pending',null),
+    mk('HA-7E5B10','Sarah Johnson','sarah.j@example.com','+27 82 444 9999','Deluxe Room',7,4,2,19200,5000,'card','confirmed','Anniversary trip'),
+    mk('HA-12AB34','Carlos Mondlane','carlos@example.com','+258 84 600 7000','Standard Room',-6,2,1,7000,7000,'cash','checked_out',null),
+    mk('HA-55DD66','Lina Tembe','lina@example.com','+258 82 101 2020','Family Room',5,2,3,13000,0,'mkesh','cancelled',null)
+  ];
+  const pays = {
+    'HA-3F8A21':[{amount:4800,method:'mpesa',transaction_ref:'QJK7H2PL9',notes:'Deposit',created_at:new Date().toISOString(),recorded_by_name:'Reception'}],
+    'HA-9D2E77':[{amount:28500,method:'card',transaction_ref:null,notes:null,created_at:new Date().toISOString(),recorded_by_name:'Reception'}],
+    'HA-41AA9C':[{amount:10000,method:'emola',transaction_ref:'EM88123',notes:null,created_at:new Date().toISOString(),recorded_by_name:'Reception'}],
+    'HA-7E5B10':[{amount:5000,method:'card',transaction_ref:null,notes:'Deposit',created_at:new Date().toISOString(),recorded_by_name:'Reception'}],
+    'HA-12AB34':[{amount:7000,method:'cash',transaction_ref:null,notes:null,created_at:new Date().toISOString(),recorded_by_name:'Reception'}]
+  };
+  let signedIn = false;
+  const wait = () => new Promise(r => setTimeout(r, 250));
+  return {
+    async session(){ return signedIn ? { user:{ email:'demo@hotel-ananga' } } : null; },
+    async signIn(email){ await wait(); signedIn = true; return { user:{ email: email || 'demo@hotel-ananga' } }; },
+    async isStaff(){ return true; },
+    async signOut(){ signedIn = false; },
+    async list(){ await wait(); return rows.map(r => ({...r})); },
+    async payments(ref){ return (pays[ref] || []).map(p => ({...p})); },
+    async setStatus(ref, status){ await wait(); rows.find(r => r.reference === ref).status = status; },
+    async pay(ref, amount, method, txn, notes){
+      await wait();
+      const b = rows.find(r => r.reference === ref);
+      if (b.amount_paid + amount < 0) throw new Error('Refund is larger than the amount paid.');
+      if (b.amount_paid + amount > b.total_price) throw new Error('This would be more than the booking total.');
+      b.amount_paid += amount;
+      (pays[ref] = pays[ref] || []).push({ amount, method, transaction_ref: txn || null, notes: notes || null, created_at: new Date().toISOString(), recorded_by_name: 'Demo' });
+    }
+  };
+}
+
+function errText(err){
+  if (err && err.friendly) return err.message;
+  const m = (err && err.message) || '';
+  if (/Failed to fetch|NetworkError/i.test(m)) return t('loadFail');
+  if (/more than the booking total/i.test(m)) return t('errOver');
+  if (/Refund is larger/i.test(m)) return t('errRefund');
+  if (/Not authorized|JWT/i.test(m)) return t('errAuth');
+  if (m && m.length < 160) return m;
+  console.error(err);
+  return t('genericError');
+}
+
+/* ---------- State ---------- */
+let bookings = [];
+let tab = 'upcoming';
+let current = null;
+
+/* ---------- Auth ---------- */
+async function start(){
+  applyLang();
+  $('loginDemo').hidden = LIVE;
+  $('appDemo').hidden = LIVE;
+  if (CONFIG_ERROR) { showLogin(); showBox('loginError', 'Setup problem: ' + CONFIG_ERROR); return; }
+  try {
+    const s = await api.session();
+    if (s && await api.isStaff()) return enterApp(s);
+  } catch(e) { /* fall through to login */ }
+  showLogin();
+}
+function showLogin(){ $('loginView').hidden = false; $('appView').hidden = true; }
+function showBox(id, msg){ const b = $(id); b.textContent = msg || ''; b.hidden = !msg; }
+
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showBox('loginError', '');
+  const email = $('email').value.trim(), pw = $('password').value;
+  if (LIVE && (!email || !pw)) return showBox('loginError', t('badLogin'));
+  const btn = $('loginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const s = await api.signIn(email, pw);
+    if (!(await api.isStaff())) { await api.signOut(); throw Object.assign(new Error(t('notStaff')), { friendly:true }); }
+    $('password').value = '';
+    enterApp(s);
+  } catch(err) {
+    showBox('loginError', errText(err));
+  } finally {
+    btn.disabled = false; btn.textContent = t('signIn');
+  }
+});
+
+async function enterApp(session){
+  $('loginView').hidden = true; $('appView').hidden = false;
+  $('whoAmI').textContent = session && session.user ? session.user.email : '';
+  await load();
+}
+
+$('signOutBtn').addEventListener('click', async () => {
+  await api.signOut(); bookings = []; closeDrawer(); showLogin();
+});
+
+/* ---------- Load + render ---------- */
+async function load(){
+  showBox('appError', '');
+  try { bookings = await api.list(); render(); }
+  catch(err) { showBox('appError', errText(err)); }
+}
+$('refreshBtn').addEventListener('click', load);
+
+const TABS = {
+  upcoming:   b => ACTIVE.includes(b.status) && b.check_out >= TODAY,
+  arrivals:   b => b.check_in === TODAY && ['pending','confirmed'].includes(b.status),
+  departures: b => b.check_out === TODAY && b.status === 'checked_in',
+  inhouse:    b => b.status === 'checked_in',
+  pending:    b => b.status === 'pending',
+  unpaid:     b => b.status !== 'cancelled' && Number(b.amount_paid) < Number(b.total_price),
+  past:       b => b.status === 'checked_out' || (b.check_out < TODAY && b.status !== 'cancelled'),
+  cancelled:  b => b.status === 'cancelled',
+  all:        () => true
+};
+
+function render(){
+  // stats
+  $('stArr').textContent = bookings.filter(TABS.arrivals).length;
+  $('stDep').textContent = bookings.filter(TABS.departures).length;
+  $('stIn').textContent  = bookings.filter(TABS.inhouse).length;
+  $('stPen').textContent = bookings.filter(TABS.pending).length;
+  const due = bookings.filter(b => ACTIVE.includes(b.status))
+                      .reduce((s, b) => s + Math.max(0, Number(b.total_price) - Number(b.amount_paid)), 0);
+  $('stBal').textContent = money(due);
+
+  // tabs with counts
+  $('tabs').innerHTML = Object.keys(TABS).map(k =>
+    `<button type="button" data-tab="${k}" class="${k===tab?'on':''}">${t('tab_'+k)}<span class="c">${bookings.filter(TABS[k]).length}</span></button>`).join('');
+
+  // filter + search
+  const q = $('search').value.trim().toLowerCase();
+  let list = bookings.filter(TABS[tab]);
+  if (q) list = list.filter(b => [b.reference, b.guest_name, b.phone, b.email, b.room_name].some(v => String(v||'').toLowerCase().includes(q)));
+  const asc = ['upcoming','arrivals','departures','inhouse','pending','unpaid'].includes(tab);
+  list.sort((a, b) => asc ? a.check_in.localeCompare(b.check_in) : b.check_in.localeCompare(a.check_in));
+
+  const payCell = b => {
+    const paid = Number(b.amount_paid), total = Number(b.total_price);
+    const cls = paid >= total ? 'p-paid' : paid > 0 ? 'p-part' : 'p-none';
+    return `<span class="${cls}">${money(paid, b.currency)}</span>`;
+  };
+  const pill = s => `<span class="pill s-${s}">${t('st_'+s)}</span>`;
+
+  $('rows').innerHTML = list.length ? list.map(b => `
+    <tr data-ref="${esc(b.reference)}">
+      <td><span class="ref">${esc(b.reference)}</span></td>
+      <td>${esc(b.guest_name)}<div class="sub">${esc(b.phone)}</div></td>
+      <td>${esc(b.room_name)}<div class="sub">${t('guestsShort',{n:b.guests})}</div></td>
+      <td>${fmtDate(b.check_in)} → ${fmtDate(b.check_out)}<div class="sub">${t('nightsShort',{n:b.nights})}</div></td>
+      <td class="num">${money(b.total_price, b.currency)}</td>
+      <td class="num">${payCell(b)}</td>
+      <td>${t('pm_'+b.payment_method)}</td>
+      <td>${pill(b.status)}</td>
+    </tr>`).join('') : `<tr><td colspan="8" class="empty">${t('noBookings')}</td></tr>`;
+
+  $('cards').innerHTML = list.length ? list.map(b => `
+    <div class="bcard" data-ref="${esc(b.reference)}">
+      <div class="row"><h3>${esc(b.guest_name)}</h3>${pill(b.status)}</div>
+      <div class="sub">${esc(b.room_name)} · ${fmtDate(b.check_in)} → ${fmtDate(b.check_out)} · ${t('nightsShort',{n:b.nights})}</div>
+      <div class="row sub"><span class="ref" style="font-family:ui-monospace,monospace">${esc(b.reference)}</span>
+        <span>${payCell(b)} / ${money(b.total_price, b.currency)}</span></div>
+    </div>`).join('') : `<div class="empty">${t('noBookings')}</div>`;
+}
+
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; render(); } });
+document.querySelectorAll('.stat').forEach(s => s.addEventListener('click', () => { tab = s.dataset.tab; render(); }));
+$('search').addEventListener('input', render);
+$('rows').addEventListener('click', e => { const r = e.target.closest('[data-ref]'); if (r) openDrawer(r.dataset.ref); });
+$('cards').addEventListener('click', e => { const r = e.target.closest('[data-ref]'); if (r) openDrawer(r.dataset.ref); });
+
+/* ---------- Drawer ---------- */
+function fillMethodSelect(){
+  const sel = $('pMethod'), v = sel.value;
+  sel.innerHTML = METHODS.map(m => `<option value="${m}">${t('pm_'+m)}</option>`).join('');
+  if (v) sel.value = v;
+}
+
+async function openDrawer(ref, keepMessages){
+  const b = bookings.find(x => x.reference === ref);
+  if (!b) return;
+  current = b;
+  if (!keepMessages) { $('statusMsg').textContent = ''; $('payMsg').textContent = ''; $('payForm').reset(); }
+
+  $('dName').textContent = b.guest_name;
+  $('dRef').textContent = b.reference;
+  $('dStatus').className = 'pill s-' + b.status;
+  $('dStatus').textContent = t('st_' + b.status);
+
+  const acts = { pending:['confirm','cancel'], confirmed:['check_in','cancel'], checked_in:['check_out'] }[b.status] || [];
+  const target = { confirm:'confirmed', check_in:'checked_in', check_out:'checked_out', cancel:'cancelled' };
+  $('dActions').innerHTML = acts.map(a =>
+    `<button type="button" class="btn small ${a==='cancel'?'danger':''}" data-act="${a}">${t('act_'+a)}</button>`).join('');
+  $('dActions').querySelectorAll('[data-act]').forEach(btn => btn.onclick = () => changeStatus(b, target[btn.dataset.act], btn));
+
+  $('dStay').innerHTML = `
+    <dt>${t('room')}</dt><dd>${esc(b.room_name)}</dd>
+    <dt>${t('checkIn')}</dt><dd>${fmtDate(b.check_in, true)}</dd>
+    <dt>${t('checkOut')}</dt><dd>${fmtDate(b.check_out, true)}</dd>
+    <dt>${t('nights')}</dt><dd>${b.nights}</dd>
+    <dt>${t('guests')}</dt><dd>${b.guests}</dd>
+    <dt>${t('booked')}</dt><dd>${new Date(b.created_at).toLocaleString(locale())}</dd>`;
+  $('dGuest').innerHTML = `
+    <dt>${t('name')}</dt><dd>${esc(b.guest_name)}</dd>
+    <dt>${t('phone')}</dt><dd><a href="tel:${esc(b.phone.replace(/\s/g,''))}">${esc(b.phone)}</a></dd>
+    <dt>${t('email')}</dt><dd><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></dd>
+    <dt>${t('prefMethod')}</dt><dd>${t('pm_'+b.payment_method)}</dd>
+    ${b.notes ? `<dt>${t('requests')}</dt><dd>${esc(b.notes)}</dd>` : ''}`;
+
+  const total = Number(b.total_price), paid = Number(b.amount_paid), bal = Math.max(0, total - paid);
+  $('dTotal').textContent = money(total, b.currency);
+  $('dPaid').textContent = money(paid, b.currency);
+  $('dBal').textContent = bal ? money(bal, b.currency) : '✓';
+  $('dBal').style.color = bal ? 'var(--danger)' : 'var(--ok)';
+  if (!keepMessages) {
+    $('pAmount').value = bal || '';
+    $('pMethod').value = b.payment_method;
+  }
+  $('payForm').hidden = b.status === 'cancelled' && paid === 0;
+
+  $('overlay').hidden = false; $('drawer').hidden = false;
+  document.body.style.overflow = 'hidden';
+
+  $('dPayments').innerHTML = '';
+  try {
+    const ps = await api.payments(b.reference);
+    if (current !== b) return;
+    $('dPayments').innerHTML = ps.length ? ps.map(p => `
+      <li><div>${t('pm_'+p.method)}${p.transaction_ref ? ' · ' + esc(p.transaction_ref) : ''}
+        <div class="sub">${new Date(p.created_at).toLocaleString(locale())}${p.recorded_by_name ? ' · ' + t('by') + ' ' + esc(p.recorded_by_name) : ''}${p.notes ? ' · ' + esc(p.notes) : ''}</div></div>
+        <b style="color:${p.amount < 0 ? 'var(--danger)' : 'inherit'}">${money(p.amount, b.currency)}</b></li>`).join('')
+      : `<li class="sub">${t('noPayments')}</li>`;
+  } catch(err) { $('dPayments').innerHTML = `<li class="msg err">${esc(errText(err))}</li>`; }
+}
+
+function closeDrawer(){
+  current = null; $('overlay').hidden = true; $('drawer').hidden = true; document.body.style.overflow = '';
+}
+$('closeDrawer').addEventListener('click', closeDrawer);
+$('overlay').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && current) closeDrawer(); });
+
+async function changeStatus(b, status, btn){
+  if (status === 'cancelled' && !confirm(t('noShowCancel'))) return;
+  const bal = Number(b.total_price) - Number(b.amount_paid);
+  if (status === 'checked_out' && bal > 0 && !confirm(t('checkoutBalance', { amount: money(bal, b.currency) }))) return;
+  btn.disabled = true;
+  try {
+    await api.setStatus(b.reference, status);
+    await load();
+    openDrawer(b.reference, true);
+    $('statusMsg').className = 'msg ok'; $('statusMsg').textContent = t('statusSaved');
+  } catch(err) {
+    $('statusMsg').className = 'msg err'; $('statusMsg').textContent = errText(err);
+    btn.disabled = false;
+  }
+}
+
+$('payForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = current; if (!b) return;
+  const amt = Number($('pAmount').value);
+  const msg = $('payMsg');
+  if (!(amt > 0)) { msg.className = 'msg err'; msg.textContent = t('enterAmount'); return; }
+  const refund = $('pType').value === 'refund';
+  const btn = $('payBtn'); btn.disabled = true;
+  try {
+    await api.pay(b.reference, refund ? -amt : amt, $('pMethod').value, $('pTxn').value.trim(), $('pNotes').value.trim());
+    await load();
+    $('payForm').reset();
+    openDrawer(b.reference, true);
+    const nb = bookings.find(x => x.reference === b.reference);
+    $('pAmount').value = Math.max(0, Number(nb.total_price) - Number(nb.amount_paid)) || '';
+    $('pMethod').value = nb.payment_method;
+    msg.className = 'msg ok'; msg.textContent = t(refund ? 'refundSaved' : 'paymentSaved');
+  } catch(err) {
+    msg.className = 'msg err'; msg.textContent = errText(err);
+  } finally { btn.disabled = false; }
+});
+
+start();
+</script>
+</body>
+</html>

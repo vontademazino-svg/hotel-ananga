@@ -129,6 +129,12 @@
     .contact dl{grid-template-columns:1fr;gap:4px}
     .contact dd{margin-bottom:12px}
   }
+
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--white);margin-left:14px}
+  .lang button{border:0;background:transparent;padding:6px 12px;font:600 .8rem var(--sans);color:var(--muted);cursor:pointer}
+  .lang button.on{background:var(--forest);color:var(--white)}
+  .nav-right{display:flex;align-items:center;gap:6px}
+  @media (max-width:720px){ .lang{margin-left:0} }
 </style>
 </head>
 <body>
@@ -136,32 +142,35 @@
 <header>
   <div class="wrap nav">
     <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
-    <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" id="menuBtn">&#9776;</button>
-    <nav>
-      <ul id="menu">
-        <li><a href="index.html" aria-current="page">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#facilities">Facilities</a></li>
-        <li><a href="#rooms">Rooms</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li><a class="btn" href="booking.html">Book a Stay</a></li>
-      </ul>
-    </nav>
+    <div class="nav-right">
+      <button class="menu-toggle" aria-label="Menu" aria-expanded="false" id="menuBtn">&#9776;</button>
+      <nav>
+        <ul id="menu">
+          <li><a href="index.html" aria-current="page" data-i18n="navHome">Home</a></li>
+          <li><a href="#about" data-i18n="navAbout">About</a></li>
+          <li><a href="#facilities" data-i18n="navFacilities">Facilities</a></li>
+          <li><a href="#rooms" data-i18n="navRooms">Rooms</a></li>
+          <li><a href="#contact" data-i18n="navContact">Contact</a></li>
+          <li><a class="btn" href="booking.html" data-i18n="navBook">Book a Stay</a></li>
+        </ul>
+      </nav>
+      <div class="lang" data-lang-switch></div>
+    </div>
   </div>
 </header>
 
-<!-- HERO: put graph/hero.jpg (or a short graph/hero.mp4) in the graph folder -->
+<!-- HERO: put graph/hero.jpg in the graph folder -->
 <section class="hero" style="padding:0">
-  <div class="media" data-label="Hero photo — graph/hero.jpg">
-    <img src="graph/hero.jpg" alt="Hotel Ananga entrance" onerror="this.remove()">
+  <div class="media" data-label="graph/hero.jpg">
+    <img src="graph/hero.jpg" alt="Hotel Ananga" onerror="this.remove()">
   </div>
   <div class="wrap hero-content">
-    <div class="eyebrow">Welcome to Hotel Ananga</div>
-    <h1>A calm place to arrive, rest and feel at home.</h1>
-    <p>Comfortable rooms, attentive service and a peaceful setting, whether you are here for business, family or a well-earned break.</p>
+    <div class="eyebrow" data-i18n="heroEyebrow">Welcome to Hotel Ananga</div>
+    <h1 data-i18n="heroTitle">A calm place to arrive, rest and feel at home.</h1>
+    <p data-i18n="heroText">Comfortable rooms, attentive service and a peaceful setting, whether you are here for business, family or a well-earned break.</p>
     <div class="hero-actions">
-      <a class="btn" href="booking.html">Check Availability</a>
-      <a class="btn ghost" href="#rooms">View Rooms</a>
+      <a class="btn" href="booking.html" data-i18n="heroBook">Check Availability</a>
+      <a class="btn ghost" href="#rooms" data-i18n="heroRooms">View Rooms</a>
     </div>
   </div>
 </section>
@@ -169,18 +178,18 @@
 <!-- ABOUT -->
 <section id="about">
   <div class="wrap about">
-    <div class="media" data-label="Lobby or exterior photo — graph/about.jpg">
-      <img src="graph/about.jpg" alt="Hotel Ananga lobby" onerror="this.remove()">
+    <div class="media" data-label="graph/about.jpg">
+      <img src="graph/about.jpg" alt="Hotel Ananga" onerror="this.remove()">
     </div>
     <div>
-      <div class="eyebrow">Our Story</div>
-      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 18px">Hospitality, simply done well.</h2>
-      <p>Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.</p>
-      <p>We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.</p>
+      <div class="eyebrow" data-i18n="aboutEyebrow">Our Story</div>
+      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 18px" data-i18n="aboutTitle">Hospitality, simply done well.</h2>
+      <p data-i18n="aboutP1">Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.</p>
+      <p data-i18n="aboutP2">We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.</p>
       <div class="stats">
-        <div><strong>4</strong><span>Room types</span></div>
-        <div><strong>24/7</strong><span>Reception</span></div>
-        <div><strong>Online</strong><span>Instant booking</span></div>
+        <div><strong>4</strong><span data-i18n="statRooms">Room types</span></div>
+        <div><strong>24/7</strong><span data-i18n="statReception">Reception</span></div>
+        <div><strong data-i18n="statOnline">Online</strong><span data-i18n="statBooking">Instant booking</span></div>
       </div>
     </div>
   </div>
@@ -190,22 +199,22 @@
 <section id="facilities" class="facilities">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Facilities</div>
-      <h2>Everything you need for a comfortable stay</h2>
-      <p>From your first coffee to a quiet evening, our facilities are designed around your comfort.</p>
+      <div class="eyebrow" data-i18n="facEyebrow">Facilities</div>
+      <h2 data-i18n="facTitle">Everything you need for a comfortable stay</h2>
+      <p data-i18n="facText">From your first coffee to a quiet evening, our facilities are designed around your comfort.</p>
     </div>
     <div class="grid-3">
       <article class="card">
-        <div class="media" data-label="Restaurant photo — graph/restaurant.jpg"><img src="graph/restaurant.jpg" alt="Restaurant" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Restaurant</h3><p>Fresh breakfast every morning and a relaxed dining room serving local and international dishes.</p></div>
+        <div class="media" data-label="graph/restaurant.jpg"><img src="graph/restaurant.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="fac1T">Restaurant</h3><p data-i18n="fac1">Fresh breakfast every morning and a relaxed dining room serving local and international dishes.</p></div>
       </article>
       <article class="card">
-        <div class="media" data-label="Garden or terrace photo — graph/garden.jpg"><img src="graph/garden.jpg" alt="Garden terrace" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Garden &amp; Terrace</h3><p>A quiet outdoor space to unwind, read or enjoy the evening air.</p></div>
+        <div class="media" data-label="graph/garden.jpg"><img src="graph/garden.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="fac2T">Garden &amp; Terrace</h3><p data-i18n="fac2">A quiet outdoor space to unwind, read or enjoy the evening air.</p></div>
       </article>
       <article class="card">
-        <div class="media" data-label="Meeting room photo — graph/meeting.jpg"><img src="graph/meeting.jpg" alt="Meeting room" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Meetings &amp; Events</h3><p>A flexible room for meetings, workshops and small celebrations, with Wi-Fi and projector.</p></div>
+        <div class="media" data-label="graph/meeting.jpg"><img src="graph/meeting.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="fac3T">Meetings &amp; Events</h3><p data-i18n="fac3">A flexible room for meetings, workshops and small celebrations, with Wi-Fi and projector.</p></div>
       </article>
     </div>
   </div>
@@ -215,29 +224,29 @@
 <section id="rooms">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Rooms</div>
-      <h2>Choose the room that suits your stay</h2>
-      <p>All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.</p>
+      <div class="eyebrow" data-i18n="roomsEyebrow">Rooms</div>
+      <h2 data-i18n="roomsTitle">Choose the room that suits your stay</h2>
+      <p data-i18n="roomsText">All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.</p>
     </div>
     <div class="rooms-list">
       <article class="room">
-        <div class="media" data-label="graph/room-standard.jpg"><img src="graph/room-standard.jpg" alt="Standard Room" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Standard Room</h3><div class="meta">Up to 2 guests · Queen bed</div><p>A calm, well-appointed room with a work desk and en-suite shower.</p><div class="price">from MZN 3,500 <small>/ night</small></div></div>
+        <div class="media" data-label="graph/room-standard.jpg"><img src="graph/room-standard.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="r1T">Standard Room</h3><div class="meta" data-i18n="r1M">Up to 2 guests · Queen bed</div><p data-i18n="r1">A calm, well-appointed room with a work desk and en-suite shower.</p><div class="price"><span data-i18n="from">from</span> MZN 3,500 <small data-i18n="perNight">/ night</small></div></div>
       </article>
       <article class="room">
-        <div class="media" data-label="graph/room-deluxe.jpg"><img src="graph/room-deluxe.jpg" alt="Deluxe Room" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Deluxe Room</h3><div class="meta">Up to 2 guests · King bed</div><p>More space and natural light, with a seating area and garden view.</p><div class="price">from MZN 4,800 <small>/ night</small></div></div>
+        <div class="media" data-label="graph/room-deluxe.jpg"><img src="graph/room-deluxe.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="r2T">Deluxe Room</h3><div class="meta" data-i18n="r2M">Up to 2 guests · King bed</div><p data-i18n="r2">More space and natural light, with a seating area and garden view.</p><div class="price"><span data-i18n="from">from</span> MZN 4,800 <small data-i18n="perNight">/ night</small></div></div>
       </article>
       <article class="room">
-        <div class="media" data-label="graph/room-family.jpg"><img src="graph/room-family.jpg" alt="Family Room" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Family Room</h3><div class="meta">Up to 4 guests · King + 2 singles</div><p>Two connected sleeping areas, ideal for families travelling together.</p><div class="price">from MZN 6,500 <small>/ night</small></div></div>
+        <div class="media" data-label="graph/room-family.jpg"><img src="graph/room-family.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="r3T">Family Room</h3><div class="meta" data-i18n="r3M">Up to 4 guests · King + 2 singles</div><p data-i18n="r3">Two connected sleeping areas, ideal for families travelling together.</p><div class="price"><span data-i18n="from">from</span> MZN 6,500 <small data-i18n="perNight">/ night</small></div></div>
       </article>
       <article class="room">
-        <div class="media" data-label="graph/room-suite.jpg"><img src="graph/room-suite.jpg" alt="Ananga Suite" onerror="this.remove()"></div>
-        <div class="card-body"><h3>Ananga Suite</h3><div class="meta">Up to 2 guests · King bed · Balcony</div><p>Our finest room, with a separate living area, bathtub and private balcony.</p><div class="price">from MZN 9,500 <small>/ night</small></div></div>
+        <div class="media" data-label="graph/room-suite.jpg"><img src="graph/room-suite.jpg" alt="" onerror="this.remove()"></div>
+        <div class="card-body"><h3 data-i18n="r4T">Ananga Suite</h3><div class="meta" data-i18n="r4M">Up to 2 guests · King bed · Balcony</div><p data-i18n="r4">Our finest room, with a separate living area, bathtub and private balcony.</p><div class="price"><span data-i18n="from">from</span> MZN 9,500 <small data-i18n="perNight">/ night</small></div></div>
       </article>
     </div>
-    <div class="center"><a class="btn" href="booking.html">See Availability &amp; Book</a></div>
+    <div class="center"><a class="btn" href="booking.html" data-i18n="roomsBtn">See Availability &amp; Book</a></div>
   </div>
 </section>
 
@@ -245,12 +254,12 @@
 <section class="video-band">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow" style="color:#e3c995">Take a Look Around</div>
-      <h2>Hotel tour</h2>
-      <p>A short film of our rooms, spaces and surroundings.</p>
+      <div class="eyebrow" style="color:#e3c995" data-i18n="tourEyebrow">Take a Look Around</div>
+      <h2 data-i18n="tourTitle">Hotel tour</h2>
+      <p data-i18n="tourText">A short film of our rooms, spaces and surroundings.</p>
     </div>
-    <div class="media" data-label="Hotel tour video — graph/hotel-tour.mp4">
-      <video controls preload="metadata" poster="graph/video-poster.jpg" onerror="this.remove()">
+    <div class="media" data-label="graph/hotel-tour.mp4">
+      <video controls preload="metadata" poster="graph/video-poster.jpg">
         <source src="graph/hotel-tour.mp4" type="video/mp4" onerror="this.parentElement.remove()">
       </video>
     </div>
@@ -261,16 +270,16 @@
 <section id="gallery">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">Gallery</div>
-      <h2>Moments at Ananga</h2>
+      <div class="eyebrow" data-i18n="galEyebrow">Gallery</div>
+      <h2 data-i18n="galTitle">Moments at Ananga</h2>
     </div>
     <div class="gallery">
-      <div class="media" data-label="graph/gallery-1.jpg"><img src="graph/gallery-1.jpg" alt="Hotel gallery photo 1" onerror="this.remove()"></div>
-      <div class="media" data-label="graph/gallery-2.jpg"><img src="graph/gallery-2.jpg" alt="Hotel gallery photo 2" onerror="this.remove()"></div>
-      <div class="media" data-label="graph/gallery-3.jpg"><img src="graph/gallery-3.jpg" alt="Hotel gallery photo 3" onerror="this.remove()"></div>
-      <div class="media" data-label="graph/gallery-4.jpg"><img src="graph/gallery-4.jpg" alt="Hotel gallery photo 4" onerror="this.remove()"></div>
-      <div class="media" data-label="graph/gallery-5.jpg"><img src="graph/gallery-5.jpg" alt="Hotel gallery photo 5" onerror="this.remove()"></div>
-      <div class="media" data-label="graph/gallery-6.jpg"><img src="graph/gallery-6.jpg" alt="Hotel gallery photo 6" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-1.jpg"><img src="graph/gallery-1.jpg" alt="" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-2.jpg"><img src="graph/gallery-2.jpg" alt="" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-3.jpg"><img src="graph/gallery-3.jpg" alt="" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-4.jpg"><img src="graph/gallery-4.jpg" alt="" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-5.jpg"><img src="graph/gallery-5.jpg" alt="" onerror="this.remove()"></div>
+      <div class="media" data-label="graph/gallery-6.jpg"><img src="graph/gallery-6.jpg" alt="" onerror="this.remove()"></div>
     </div>
   </div>
 </section>
@@ -279,27 +288,28 @@
 <section id="contact" style="padding-top:0">
   <div class="wrap contact">
     <div>
-      <div class="eyebrow">Contact &amp; Location</div>
-      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 24px">We look forward to welcoming you</h2>
+      <div class="eyebrow" data-i18n="conEyebrow">Contact &amp; Location</div>
+      <h2 style="font-size:clamp(2rem,4vw,2.9rem);margin:10px 0 24px" data-i18n="conTitle">We look forward to welcoming you</h2>
       <dl>
-        <dt>Address</dt><dd>[Street address, city — to be added]</dd>
-        <dt>Phone</dt><dd>[+258 phone number — to be added]</dd>
-        <dt>Email</dt><dd>[reservations email — to be added]</dd>
-        <dt>Check-in</dt><dd>From 14:00</dd>
-        <dt>Check-out</dt><dd>Until 11:00</dd>
+        <dt data-i18n="conAddress">Address</dt><dd>[Street address, city]</dd>
+        <dt data-i18n="conPhone">Phone</dt><dd>[+258 phone number]</dd>
+        <dt>Email</dt><dd>[reservations email]</dd>
+        <dt data-i18n="conPayments">Payments</dt><dd data-i18n="conPaymentsV">Cash, card, M-Pesa, e-Mola, mKesh, bank transfer</dd>
+        <dt data-i18n="conIn">Check-in</dt><dd data-i18n="conInV">From 14:00</dd>
+        <dt data-i18n="conOut">Check-out</dt><dd data-i18n="conOutV">Until 11:00</dd>
       </dl>
     </div>
-    <div class="map media" data-label="Map or location photo — graph/location.jpg">
-      <img src="graph/location.jpg" alt="Hotel location" onerror="this.remove()">
+    <div class="map media" data-label="graph/location.jpg">
+      <img src="graph/location.jpg" alt="" onerror="this.remove()">
     </div>
   </div>
 </section>
 
 <section class="cta">
   <div class="wrap">
-    <h2>Ready to plan your stay?</h2>
-    <p>Check live availability and reserve your room in a few minutes.</p>
-    <a class="btn" href="booking.html">Book Now</a>
+    <h2 data-i18n="ctaTitle">Ready to plan your stay?</h2>
+    <p data-i18n="ctaText">Check live availability and reserve your room in a few minutes.</p>
+    <a class="btn" href="booking.html" data-i18n="ctaBtn">Book Now</a>
   </div>
 </section>
 
@@ -307,22 +317,95 @@
   <div class="wrap foot">
     <a class="brand" href="index.html">Hotel <span style="color:var(--brass)">Ananga</span></a>
     <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="booking.html">Rooms &amp; Booking</a></li>
-      <li><a href="#contact">Contact</a></li>
+      <li><a href="index.html" data-i18n="navHome">Home</a></li>
+      <li><a href="booking.html" data-i18n="navBooking">Rooms &amp; Booking</a></li>
+      <li><a href="#contact" data-i18n="navContact">Contact</a></li>
+      <li><a href="admin.html" data-i18n="navStaff">Staff</a></li>
     </ul>
-    <div>&copy; <span id="year"></span> Hotel Ananga. All rights reserved.</div>
+    <div>&copy; <span id="year"></span> Hotel Ananga. <span data-i18n="rights">All rights reserved.</span></div>
   </div>
 </footer>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
-  const btn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
-  btn.addEventListener('click', () => {
-    const open = menu.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open);
+const I18N = {
+  en: {
+    navHome:'Home', navAbout:'About', navFacilities:'Facilities', navRooms:'Rooms', navContact:'Contact', navBook:'Book a Stay',
+    navBooking:'Rooms & Booking', navStaff:'Staff', rights:'All rights reserved.',
+    heroEyebrow:'Welcome to Hotel Ananga', heroTitle:'A calm place to arrive, rest and feel at home.',
+    heroText:'Comfortable rooms, attentive service and a peaceful setting, whether you are here for business, family or a well-earned break.',
+    heroBook:'Check Availability', heroRooms:'View Rooms',
+    aboutEyebrow:'Our Story', aboutTitle:'Hospitality, simply done well.',
+    aboutP1:'Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.',
+    aboutP2:'We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.',
+    statRooms:'Room types', statReception:'Reception', statOnline:'Online', statBooking:'Instant booking',
+    facEyebrow:'Facilities', facTitle:'Everything you need for a comfortable stay',
+    facText:'From your first coffee to a quiet evening, our facilities are designed around your comfort.',
+    fac1T:'Restaurant', fac1:'Fresh breakfast every morning and a relaxed dining room serving local and international dishes.',
+    fac2T:'Garden & Terrace', fac2:'A quiet outdoor space to unwind, read or enjoy the evening air.',
+    fac3T:'Meetings & Events', fac3:'A flexible room for meetings, workshops and small celebrations, with Wi-Fi and projector.',
+    roomsEyebrow:'Rooms', roomsTitle:'Choose the room that suits your stay',
+    roomsText:'All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.',
+    r1T:'Standard Room', r1M:'Up to 2 guests · Queen bed', r1:'A calm, well-appointed room with a work desk and en-suite shower.',
+    r2T:'Deluxe Room', r2M:'Up to 2 guests · King bed', r2:'More space and natural light, with a seating area and garden view.',
+    r3T:'Family Room', r3M:'Up to 4 guests · King + 2 singles', r3:'Two connected sleeping areas, ideal for families travelling together.',
+    r4T:'Ananga Suite', r4M:'Up to 2 guests · King bed · Balcony', r4:'Our finest room, with a separate living area, bathtub and private balcony.',
+    from:'from', perNight:'/ night', roomsBtn:'See Availability & Book',
+    tourEyebrow:'Take a Look Around', tourTitle:'Hotel tour', tourText:'A short film of our rooms, spaces and surroundings.',
+    galEyebrow:'Gallery', galTitle:'Moments at Ananga',
+    conEyebrow:'Contact & Location', conTitle:'We look forward to welcoming you',
+    conAddress:'Address', conPhone:'Phone', conPayments:'Payments', conPaymentsV:'Cash, card, M-Pesa, e-Mola, mKesh, bank transfer',
+    conIn:'Check-in', conInV:'From 14:00', conOut:'Check-out', conOutV:'Until 11:00',
+    ctaTitle:'Ready to plan your stay?', ctaText:'Check live availability and reserve your room in a few minutes.', ctaBtn:'Book Now'
+  },
+  pt: {
+    navHome:'Início', navAbout:'Sobre', navFacilities:'Instalações', navRooms:'Quartos', navContact:'Contacto', navBook:'Reservar',
+    navBooking:'Quartos e Reservas', navStaff:'Equipa', rights:'Todos os direitos reservados.',
+    heroEyebrow:'Bem-vindo ao Hotel Ananga', heroTitle:'Um lugar tranquilo para chegar, descansar e sentir-se em casa.',
+    heroText:'Quartos confortáveis, atendimento atencioso e um ambiente sereno, quer esteja cá em negócios, em família ou para um merecido descanso.',
+    heroBook:'Ver disponibilidade', heroRooms:'Ver quartos',
+    aboutEyebrow:'A nossa história', aboutTitle:'Hospitalidade, simplesmente bem feita.',
+    aboutP1:'O Hotel Ananga foi criado para ser um lugar acolhedor, onde cada hóspede se sente bem tratado desde o momento em que chega.',
+    aboutP2:'Combinamos quartos cuidadosamente pensados, um serviço de confiança e a verdadeira simpatia local, para que a sua estadia seja fácil, tranquila e memorável.',
+    statRooms:'Tipos de quarto', statReception:'Receção', statOnline:'Online', statBooking:'Reserva imediata',
+    facEyebrow:'Instalações', facTitle:'Tudo o que precisa para uma estadia confortável',
+    facText:'Do primeiro café a uma noite tranquila, as nossas instalações foram pensadas para o seu conforto.',
+    fac1T:'Restaurante', fac1:'Pequeno-almoço fresco todas as manhãs e uma sala de refeições descontraída com pratos locais e internacionais.',
+    fac2T:'Jardim e Terraço', fac2:'Um espaço exterior tranquilo para relaxar, ler ou aproveitar o fim de tarde.',
+    fac3T:'Reuniões e Eventos', fac3:'Uma sala versátil para reuniões, workshops e pequenas celebrações, com Wi-Fi e projetor.',
+    roomsEyebrow:'Quartos', roomsTitle:'Escolha o quarto ideal para a sua estadia',
+    roomsText:'Todos os quartos incluem Wi-Fi gratuito, ar condicionado, casa de banho privativa e limpeza diária.',
+    r1T:'Quarto Standard', r1M:'Até 2 hóspedes · Cama de casal', r1:'Um quarto calmo e bem equipado, com secretária e casa de banho privativa com duche.',
+    r2T:'Quarto Deluxe', r2M:'Até 2 hóspedes · Cama king size', r2:'Mais espaço e luz natural, com zona de estar e vista para o jardim.',
+    r3T:'Quarto Familiar', r3M:'Até 4 hóspedes · King size + 2 de solteiro', r3:'Duas áreas de dormir ligadas, ideal para famílias que viajam juntas.',
+    r4T:'Suite Ananga', r4M:'Até 2 hóspedes · Cama king size · Varanda', r4:'O nosso melhor quarto, com sala de estar separada, banheira e varanda privativa.',
+    from:'desde', perNight:'/ noite', roomsBtn:'Ver disponibilidade e reservar',
+    tourEyebrow:'Conheça o hotel', tourTitle:'Visita ao hotel', tourText:'Um pequeno filme dos nossos quartos, espaços e arredores.',
+    galEyebrow:'Galeria', galTitle:'Momentos no Ananga',
+    conEyebrow:'Contacto e Localização', conTitle:'Esperamos recebê-lo em breve',
+    conAddress:'Morada', conPhone:'Telefone', conPayments:'Pagamentos', conPaymentsV:'Numerário, cartão, M-Pesa, e-Mola, mKesh, transferência bancária',
+    conIn:'Check-in', conInV:'A partir das 14:00', conOut:'Check-out', conOutV:'Até às 11:00',
+    ctaTitle:'Pronto para planear a sua estadia?', ctaText:'Veja a disponibilidade em tempo real e reserve o seu quarto em poucos minutos.', ctaBtn:'Reservar agora'
+  }
+};
+const LANG_KEY = 'ananga-lang';
+let lang = (() => { try { return localStorage.getItem(LANG_KEY) } catch(e) { return null } })()
+        || ((navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = lang === 'pt' ? 'Hotel Ananga — Bem-vindo' : 'Hotel Ananga — Welcome';
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = I18N[lang][el.dataset.i18n]; if (v) el.textContent = v; });
+  document.querySelectorAll('[data-lang-switch]').forEach(box => {
+    box.innerHTML = ['en','pt'].map(l => `<button type="button" class="${l===lang?'on':''}" data-l="${l}" aria-label="${l==='en'?'English':'Português'}">${l.toUpperCase()}</button>`).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem(LANG_KEY, lang) } catch(e) {} applyLang(); });
   });
-  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+}
+
+document.getElementById('year').textContent = new Date().getFullYear();
+const btn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
+btn.addEventListener('click', () => btn.setAttribute('aria-expanded', menu.classList.toggle('open')));
+menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+applyLang();
 </script>
 </body>
 </html>

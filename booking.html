@@ -282,17 +282,17 @@
    Only the PUBLIC anon/publishable key goes here (never the secret / service_role key).
    Supabase dashboard → Project Settings → API Keys.
    ========================================================= */
-const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co/';
-const SUPABASE_ANON_KEY = 'sb_publishable_SgfLDZBPbMAigv68xckWMw_1K9Gouw';
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';       // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqa2RwenBubGxyZGxobmNjdGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTQ4OTgsImV4cCI6MjEwNzg5MDg5OH0.cifuHulxDpKQanyDBABAySZKfxoMVUJhObaGjAkD0cg';  // the 'anon public' or 'publishable' key
 
 /* PAYMENT DETAILS shown to guests after booking — replace the [brackets] with the hotel's real details */
 const PAYMENT_INFO = {
   accountName: 'Hotel Ananga',
-  mpesa:  '[849050766]',
-  emola:  '[878002302]',
-  mkesh:  '[82230987]',
-  bank:   { bank: '[Millenium BIM]', account: '[1245272227]', nib: '[000100000124527222757]' },
-  whatsapp: '[WhatsApp / 849050766]'
+  mpesa:  '84 905 0766',
+  emola:  '87 800 2302',
+  mkesh:  '82 230 987',
+  bank:   { bank: 'Millennium BIM', account: '1245272227', nib: '0001 0000 0124 5272 2275 7' },
+  whatsapp: '+258 84 905 0766'
 };
 
 /* ---------- Languages ---------- */
@@ -641,6 +641,7 @@ $('newBookingBtn').addEventListener('click', () => {
 function showFriendly(err){
   const msg = (err && err.message) || '';
   if (/Failed to fetch|NetworkError|network/i.test(msg)) return showError('errNet');
+  if (/Invalid API key|No API key|JWT/i.test(msg)) return showError('Setup problem: Supabase rejected the API key in this file ("' + msg + '"). Copy the anon public key again from Supabase → Project Settings → API Keys.');
   if (/no longer available/i.test(msg)) return showError('errGone');
   let m = msg.match(/holds up to (\d+) guests/i); if (m) return showError('errCap', {n:m[1]});
   if (/payment method/i.test(msg)) return showError('errPay');

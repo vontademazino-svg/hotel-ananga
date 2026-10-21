@@ -308,10 +308,10 @@ const PAYMENT_INFO = {
 
 /* EMAIL NOTIFICATIONS (EmailJS) — see EMAIL-SETUP.md. Leave publicKey '' to switch emails off. */
 const EMAIL_SETTINGS = {
-  publicKey:  '5hlE_2kie-6EIOIxj',                 // EmailJS → Account → Public Key
-  serviceId:  'service_ov8w15p',                 // EmailJS → Email Services → Service ID (e.g. 'service_abc123')
-  templateId: 'template_otw87r7',                 // EmailJS → Email Templates → Template ID (e.g. 'template_xyz789')
-  hotelEmail: 'vontademazino@gmail.com',                 // where the hotel receives new-booking alerts
+  publicKey:  '',                 // EmailJS → Account → Public Key
+  serviceId:  '',                 // EmailJS → Email Services → Service ID (e.g. 'service_abc123')
+  templateId: '',                 // EmailJS → Email Templates → Template ID (e.g. 'template_xyz789')
+  hotelEmail: '',                 // where the hotel receives new-booking alerts
   hotelLang:  'pt'                // language of the hotel's alert email: 'pt' or 'en'
 };
 
@@ -755,6 +755,22 @@ const mb = $('menuBtn'), menu = $('menu');
 mb.addEventListener('click', () => mb.setAttribute('aria-expanded', menu.classList.toggle('open')));
 applyLang();
 if (CONFIG_ERROR) showError(CONFIG_ERROR);
+
+/* Dates chosen in the homepage booking bar: booking.html?in=YYYY-MM-DD&out=YYYY-MM-DD&guests=2 */
+(function prefillFromLink(){
+  const q = new URLSearchParams(location.search);
+  const ci = q.get('in'), co = q.get('out'), g = parseInt(q.get('guests') || '', 10);
+  const okDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '');
+  if (g >= 1) {
+    const sel = $('guests');
+    if (![...sel.options].some(o => +o.value === g || +o.text === g)) sel.add(new Option(String(g), String(g)));
+    sel.value = String(g);
+  }
+  if (okDate(ci) && okDate(co) && ci >= today && co > ci) {
+    $('checkIn').value = ci; $('checkOut').min = addDays(ci, 1); $('checkOut').value = co;
+    if (!CONFIG_ERROR) $('searchForm').requestSubmit ? $('searchForm').requestSubmit() : $('searchBtn').click();
+  }
+})();
 </script>
 </body>
 </html>

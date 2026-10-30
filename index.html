@@ -360,6 +360,11 @@
   .contact-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 
 
+  @media (min-width:1001px) and (max-width:1240px){
+    nav.main ul{gap:18px}
+    nav.main a{font-size:.74rem;letter-spacing:.08em}
+    .brand{font-size:1.45rem}
+  }
   @media (max-width:1000px){
     .feature{grid-template-columns:1fr;gap:30px;margin-top:70px}
     .feature.rev{grid-template-columns:1fr}
@@ -383,6 +388,7 @@
     <a class="brand" href="index.html">Hotel <span>Ananga</span><small>MOÇAMBIQUE</small></a>
     <nav class="main" id="mainNav" aria-label="Main">
       <ul>
+        <li><a href="index.html" data-i18n="navHome" aria-current="page">Home</a></li>
         <li><a href="index.html#about" data-i18n="navAbout">About</a></li>
         <li><a href="rooms.html" data-i18n="navRooms">Rooms</a></li>
         <li><a href="facilities.html" data-i18n="navFacilities">Facilities</a></li>
@@ -942,11 +948,40 @@ function applyLang(){
   if ($('videoModal').classList.contains('open') && $('videoBox').querySelector('.soon')) showSoon();
 }
 
+/* ---------------- Always open at the top ----------------
+   The browser should not remember an old scroll position, and a link like
+   index.html#about jumps once, then the address is cleaned so a reload starts at the top. */
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+function startPosition(){
+  const id = decodeURIComponent((location.hash || '').slice(1));
+  const target = id && document.getElementById(id);
+  if (target && !/access_token|error_code/.test(id)) {
+    const y = target.getBoundingClientRect().top + window.scrollY - 70;
+    window.scrollTo({ top: y, behavior: 'instant' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+}
+
+/* Links to a section of the page you are already on (e.g. "About" on the home page):
+   glide there without adding #about to the address */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href*="#"]'); if (!a) return;
+  const url = new URL(a.getAttribute('href'), location.href);
+  if (url.pathname !== location.pathname) return;
+  const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+  if (!target) return;
+  e.preventDefault();
+  window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 70, behavior: REDUCED ? 'auto' : 'smooth' });
+});
+
 /* ---------------- Start ---------------- */
 $('year').textContent = new Date().getFullYear();
 document.querySelectorAll('.page-hero .img').forEach(bgPhoto);
 initHero(); initBookingBar(); renderGallery(); renderMap(); renderSocial();
-applyLang(); observeReveals(); onScroll(); loadRooms();
+applyLang(); startPosition(); observeReveals(); onScroll(); loadRooms();
+window.addEventListener('pageshow', e => { if (e.persisted) window.scrollTo({ top: 0, behavior: 'instant' }); });
 </script>
 </body>
 </html>

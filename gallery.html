@@ -78,10 +78,12 @@
   @keyframes kenburns2{from{transform:scale(1.14) translate(1.5%,1%)}to{transform:scale(1.02) translate(0,0)}}
   /* tinted fallback when a photo is not uploaded yet */
   .slide .img.fallback{background-image:radial-gradient(ellipse at 30% 20%,rgba(227,201,149,.35),transparent 55%),linear-gradient(135deg,var(--c1),var(--c2))}
-  .hero::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(to bottom,rgba(8,20,17,.55) 0%,rgba(8,20,17,.08) 30%,rgba(8,20,17,.15) 60%,rgba(8,20,17,.72) 100%);pointer-events:none}
+  .hero::after{content:"";position:absolute;inset:0;z-index:3;background:radial-gradient(ellipse 60% 45% at 50% 50%,rgba(8,20,17,.42),rgba(8,20,17,0) 75%),linear-gradient(to bottom,rgba(8,20,17,.6) 0%,rgba(8,20,17,.2) 25%,rgba(8,20,17,.25) 60%,rgba(8,20,17,.75) 100%);pointer-events:none}
   .hero-text{position:absolute;z-index:4;left:0;right:0;top:50%;transform:translateY(-58%);text-align:center;padding:0 20px}
   .hero-text .eyebrow{color:var(--gold);letter-spacing:.42em}
   .hero-text h1{font-size:clamp(3rem,8vw,6.2rem);font-weight:500;letter-spacing:.06em;margin:14px 0 10px;text-shadow:0 2px 30px rgba(0,0,0,.25)}
+  .hero-text p,.hero-text .eyebrow{text-shadow:0 1px 14px rgba(0,0,0,.55)}
+  .hero-text .btn.light{background:rgba(8,20,17,.28);backdrop-filter:blur(2px)}
   .hero-text p{font-family:var(--serif);font-style:italic;font-size:clamp(1.15rem,2.2vw,1.55rem);opacity:.95;max-width:640px;margin:0 auto 32px}
   .hero-text .cap{transition:opacity .6s ease,transform .6s ease}
   .hero-text .cap.swap{opacity:0;transform:translateY(10px)}
@@ -318,7 +320,8 @@
   .page-hero{position:relative;height:64vh;min-height:440px;max-height:680px;overflow:hidden;color:#fff;background:var(--forest-dark);display:flex;align-items:flex-end}
   .page-hero .img{position:absolute;inset:-2%;background-size:cover;background-position:center;animation:kenburns 16s ease-out forwards}
   .page-hero .img.fallback{background-image:radial-gradient(ellipse at 70% 20%,rgba(227,201,149,.3),transparent 55%),linear-gradient(135deg,#2a5a4f,#0f2a25)}
-  .page-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,20,17,.55) 0%,rgba(8,20,17,.1) 40%,rgba(8,20,17,.72) 100%)}
+  .page-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,20,17,.62) 0%,rgba(8,20,17,.2) 35%,rgba(8,20,17,.35) 60%,rgba(8,20,17,.8) 100%)}
+  .page-hero h1,.page-hero p,.crumbs{text-shadow:0 1px 14px rgba(0,0,0,.45)}
   .page-hero .wrap{position:relative;z-index:2;width:100%;padding-bottom:64px}
   .crumbs{display:flex;gap:10px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:14px;list-style:none}
   .crumbs a{text-decoration:none}
@@ -402,7 +405,7 @@
 
 <!-- ===================== PAGE BANNER ===================== -->
 <section class="page-hero">
-  <div class="img fallback" data-src="graph/gallery-1.jpg"></div>
+  <div class="img fallback" data-src="graph/hero-4.jpg"></div>
   <div class="wrap">
     <ol class="crumbs"><li><a href="index.html" data-i18n="navHome">Home</a></li><li data-i18n="navGallery">Gallery</li></ol>
     <h1 data-i18n="galPageT">Gallery</h1>
@@ -796,16 +799,23 @@ function parallax(){
 bgPhoto($('videoPoster'));
 function ytId(u){ const m = String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
 function openModal(id){ $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeModal(id){ $(id).classList.remove('open'); document.body.style.overflow = ''; if (id === 'videoModal') $('videoBox').innerHTML = ''; }
+function closeModal(id){ $(id).classList.remove('open'); document.body.style.overflow = ''; if (id === 'videoModal') { $('videoBox').innerHTML = ''; $('videoBox').style.aspectRatio = ''; $('videoBox').style.width = ''; } }
 function showSoon(){ $('videoBox').innerHTML = `<div class="soon"><h3>${esc(t('videoSoonT'))}</h3><p>${esc(t('videoSoon'))}</p></div>`; }
 function openVideo(){
   const box = $('videoBox'), id = ytId(VIDEO.youtube);
   if (id) {
     box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Hotel Ananga"></iframe>`;
   } else if (VIDEO.file) {
-    box.innerHTML = `<video controls autoplay playsinline poster="graph/video-poster.jpg"><source src="${esc(VIDEO.file)}" type="video/mp4"></video>`;
+    box.innerHTML = `<video controls autoplay playsinline><source src="${esc(VIDEO.file)}" type="video/mp4"></video>`;
     const v = box.querySelector('video'), src = box.querySelector('source');
     src.addEventListener('error', showSoon); v.addEventListener('error', showSoon);
+    // phone videos are often vertical: shape the player to the video
+    v.addEventListener('loadedmetadata', () => {
+      if (v.videoWidth && v.videoHeight && v.videoHeight > v.videoWidth) {
+        const r = v.videoWidth / v.videoHeight;
+        box.style.aspectRatio = r; box.style.width = `min(100%, calc(84vh * ${r.toFixed(4)}))`;
+      }
+    });
   } else showSoon();
   openModal('videoModal');
 }

@@ -56,6 +56,20 @@
   .login-card form > div{margin-bottom:14px}
   .login-card .btn{width:100%;margin-top:6px;padding:12px}
   .login-card .back{display:block;text-align:center;margin-top:18px;font-size:.85rem;color:var(--muted)}
+  .pw{position:relative}
+  .pw input{padding-right:46px}
+  .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:none;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:8px}
+  .eye:hover{color:var(--forest);background:var(--sand)}
+  .eye svg{width:19px;height:19px}
+  .linkbtn{background:none;border:0;padding:0;color:var(--forest);font-size:.86rem;text-decoration:underline;text-underline-offset:3px}
+  .linkbtn:hover{color:var(--forest-dark)}
+  .row-end{display:flex;justify-content:flex-end;margin:-4px 0 14px}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:5px}
+  .dialog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));background:var(--paper);border-radius:16px;z-index:41;padding:26px 24px;box-shadow:0 30px 60px -25px rgba(0,0,0,.5)}
+  .dialog h2{font-size:1.7rem;margin-bottom:4px;padding-right:30px}
+  .dialog .sub{color:var(--muted);font-size:.9rem;margin-bottom:18px}
+  .dialog form > div{margin-bottom:14px}
+  .dialog .x{position:absolute;top:14px;right:14px}
 
   /* App shell */
   .topbar{background:var(--forest-dark);color:var(--white);position:sticky;top:0;z-index:30}
@@ -69,6 +83,10 @@
   .topbar .lang button.on{background:var(--white);color:var(--forest-dark)}
   .topbar .signout{background:transparent;border:1px solid rgba(255,255,255,.35);color:var(--white);border-radius:999px;padding:6px 14px;font-size:.85rem}
   .topbar .signout:hover{background:rgba(255,255,255,.1)}
+  .topbar .brand{white-space:nowrap}
+  .keybtn{display:inline-flex;align-items:center;gap:7px}
+  .keybtn svg{width:16px;height:16px}
+  @media (max-width:760px){ .keybtn span{display:none} .keybtn{padding:7px 10px} .topbar .right{gap:8px} }
 
   main{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
   .head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
@@ -232,15 +250,46 @@
       <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
       <div class="lang" data-lang-switch></div>
     </div>
-    <h1 data-i18n="loginTitle">Staff sign in</h1>
-    <p class="sub" data-i18n="loginSub">For hotel staff only.</p>
     <div class="notice demo" id="loginDemo" hidden data-i18n="demoLogin">Demo mode: the database is not connected. Enter any email and password to preview the staff page with sample bookings.</div>
-    <div class="notice error" id="loginError" hidden></div>
-    <form id="loginForm" novalidate>
-      <div><label for="email" data-i18n="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
-      <div><label for="password" data-i18n="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
-      <button class="btn" type="submit" id="loginBtn" data-i18n="signIn">Sign in</button>
-    </form>
+
+    <!-- Sign in -->
+    <div id="panelLogin">
+      <h1 data-i18n="loginTitle">Staff sign in</h1>
+      <p class="sub" data-i18n="loginSub">For hotel staff only.</p>
+      <div class="notice ok" id="loginOk" hidden></div>
+      <div class="notice error" id="loginError" hidden></div>
+      <form id="loginForm" novalidate>
+        <div><label for="email" data-i18n="email">Email</label><input id="email" type="email" autocomplete="username" required></div>
+        <div><label for="password" data-i18n="password">Password</label><div class="pw"><input id="password" type="password" autocomplete="current-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="row-end"><button type="button" class="linkbtn" id="forgotLink" data-i18n="forgotPw">Forgot password?</button></div>
+        <button class="btn" type="submit" id="loginBtn" data-i18n="signIn">Sign in</button>
+      </form>
+    </div>
+
+    <!-- Forgot password -->
+    <div id="panelForgot" hidden>
+      <h1 data-i18n="forgotTitle">Reset your password</h1>
+      <p class="sub" data-i18n="forgotSub">Enter your staff email. We will send you a link to choose a new password.</p>
+      <div class="notice ok" id="forgotOk" hidden></div>
+      <div class="notice error" id="forgotError" hidden></div>
+      <form id="forgotForm" novalidate>
+        <div><label for="fEmail" data-i18n="email">Email</label><input id="fEmail" type="email" autocomplete="username" required></div>
+        <button class="btn" type="submit" id="forgotBtn" data-i18n="sendLink">Send reset link</button>
+      </form>
+      <div class="row-end" style="justify-content:center;margin-top:16px"><button type="button" class="linkbtn" data-to-login data-i18n="backToLogin">Back to sign in</button></div>
+    </div>
+
+    <!-- New password (from the email link) -->
+    <div id="panelReset" hidden>
+      <h1 data-i18n="resetTitle">Choose a new password</h1>
+      <p class="sub" data-i18n="resetSub">You opened the reset link. Enter your new password twice.</p>
+      <div class="notice error" id="resetError" hidden></div>
+      <form id="resetForm" novalidate>
+        <div><label for="rPw1" data-i18n="newPw">New password</label><div class="pw"><input id="rPw1" type="password" autocomplete="new-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div class="hint" data-i18n="pwHint">At least 8 characters.</div></div>
+        <div><label for="rPw2" data-i18n="confirmPw">Repeat new password</label><div class="pw"><input id="rPw2" type="password" autocomplete="new-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <button class="btn" type="submit" id="resetBtn" data-i18n="savePw">Save new password</button>
+      </form>
+    </div>
     <a class="back" href="index.html" data-i18n="backToSite">← Back to website</a>
   </div>
 </section>
@@ -253,6 +302,7 @@
       <div class="right">
         <span class="who" id="whoAmI"></span>
         <div class="lang" data-lang-switch></div>
+        <button class="signout keybtn" id="changePwBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/></svg><span data-i18n="changePw">Change password</span></button>
         <button class="signout" id="signOutBtn" data-i18n="signOut">Sign out</button>
       </div>
     </div>
@@ -261,6 +311,7 @@
   <main>
     <div class="notice demo" id="appDemo" hidden data-i18n="demoApp">Demo mode: sample bookings only. Changes are not saved.</div>
     <div class="notice error" id="appError" hidden></div>
+    <div class="notice ok" id="appOk" hidden></div>
 
     <div class="views" role="tablist">
       <button type="button" data-view="bookings" class="on" data-i18n="viewBookings">Bookings</button>
@@ -386,6 +437,21 @@
   </div>
 </aside>
 
+<!-- ============ CHANGE PASSWORD ============ -->
+<div class="dialog" id="pwDialog" hidden role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+  <button class="x" id="closePw" aria-label="Close">&times;</button>
+  <h2 id="pwTitle" data-i18n="changeTitle">Change your password</h2>
+  <p class="sub" data-i18n="changeSub">For your security, enter your current password first.</p>
+  <div class="notice ok" id="pwOk" hidden></div>
+  <div class="notice error" id="pwError" hidden></div>
+  <form id="pwForm" novalidate>
+    <div><label for="cPw0" data-i18n="currentPw">Current password</label><div class="pw"><input id="cPw0" type="password" autocomplete="current-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div><label for="cPw1" data-i18n="newPw">New password</label><div class="pw"><input id="cPw1" type="password" autocomplete="new-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div class="hint" data-i18n="pwHint">At least 8 characters.</div></div>
+    <div><label for="cPw2" data-i18n="confirmPw">Repeat new password</label><div class="pw"><input id="cPw2" type="password" autocomplete="new-password" required><button type="button" class="eye" aria-label="Show password" data-eye><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <button class="btn" type="submit" id="pwBtn" style="width:100%" data-i18n="savePw">Save new password</button>
+  </form>
+</div>
+
 <!-- ============ PRINTABLE RECEIPT ============ -->
 <div id="receipt"></div>
 
@@ -450,7 +516,19 @@ const I18N = {
     billedTo:'Guest', stayDetails:'Stay', description:'Description', qty:'Nights', rate:'Rate', amountCol:'Amount',
     accommodation:'Accommodation — {room}', paymentsReceived:'Payments received', dateCol:'Date', methodCol:'Method',
     refCol:'Reference', balanceDue2:'Balance due', totalPaid:'Total paid', thankYou:'Thank you for staying with us.',
-    statusLbl:'Status', nuitLbl:'NUIT', none:'—'
+    statusLbl:'Status', nuitLbl:'NUIT', none:'—',
+    showPw:'Show password', hidePw:'Hide password', forgotPw:'Forgot password?', forgotTitle:'Reset your password',
+    forgotSub:'Enter your staff email. We will send you a link to choose a new password.', sendLink:'Send reset link',
+    backToLogin:'Back to sign in', linkSent:'If {email} is a staff account, a reset link is on its way. Check your inbox and spam folder.',
+    resetTitle:'Choose a new password', resetSub:'You opened the reset link. Enter your new password twice.',
+    newPw:'New password', confirmPw:'Repeat new password', savePw:'Save new password', pwHint:'At least 8 characters.',
+    pwSaved:'Password changed.', pwSavedLogin:'Password changed. Please sign in with your new password.',
+    changePw:'Change password', changeTitle:'Change your password', changeSub:'For your security, enter your current password first.',
+    currentPw:'Current password', pwShort:'The new password must have at least 8 characters.', pwMismatch:'The two new passwords are not the same.',
+    wrongCurrent:'The current password is not correct.', samePw:'The new password must be different from the old one.',
+    rateLimit:'Too many requests. Please wait a few minutes and try again.', linkExpired:'This reset link has expired or was already used. Please request a new one.',
+    emailNotAllowed:'The email service cannot send to this address yet. Ask the manager to set up email sending (see README), or to reset your password in Supabase.',
+    enterEmail:'Enter your email address.'
   },
   pt: {
     loginTitle:'Acesso da equipa', loginSub:'Apenas para funcionários do hotel.', email:'Email', password:'Palavra-passe', signIn:'Entrar',
@@ -494,7 +572,19 @@ const I18N = {
     billedTo:'Hóspede', stayDetails:'Estadia', description:'Descrição', qty:'Noites', rate:'Preço', amountCol:'Valor',
     accommodation:'Alojamento — {room}', paymentsReceived:'Pagamentos recebidos', dateCol:'Data', methodCol:'Método',
     refCol:'Referência', balanceDue2:'Saldo em dívida', totalPaid:'Total pago', thankYou:'Obrigado pela sua estadia.',
-    statusLbl:'Estado', nuitLbl:'NUIT', none:'—'
+    statusLbl:'Estado', nuitLbl:'NUIT', none:'—',
+    showPw:'Mostrar palavra-passe', hidePw:'Ocultar palavra-passe', forgotPw:'Esqueceu a palavra-passe?', forgotTitle:'Recuperar palavra-passe',
+    forgotSub:'Introduza o seu email da equipa. Enviaremos um link para escolher uma nova palavra-passe.', sendLink:'Enviar link',
+    backToLogin:'Voltar ao início de sessão', linkSent:'Se {email} for uma conta da equipa, o link está a caminho. Veja a caixa de entrada e o spam.',
+    resetTitle:'Escolha uma nova palavra-passe', resetSub:'Abriu o link de recuperação. Escreva a nova palavra-passe duas vezes.',
+    newPw:'Nova palavra-passe', confirmPw:'Repita a nova palavra-passe', savePw:'Guardar nova palavra-passe', pwHint:'Pelo menos 8 caracteres.',
+    pwSaved:'Palavra-passe alterada.', pwSavedLogin:'Palavra-passe alterada. Entre com a nova palavra-passe.',
+    changePw:'Mudar palavra-passe', changeTitle:'Mudar a palavra-passe', changeSub:'Por segurança, escreva primeiro a palavra-passe atual.',
+    currentPw:'Palavra-passe atual', pwShort:'A nova palavra-passe deve ter pelo menos 8 caracteres.', pwMismatch:'As duas novas palavras-passe não são iguais.',
+    wrongCurrent:'A palavra-passe atual não está correta.', samePw:'A nova palavra-passe tem de ser diferente da antiga.',
+    rateLimit:'Demasiados pedidos. Espere alguns minutos e tente novamente.', linkExpired:'Este link expirou ou já foi usado. Peça um novo.',
+    emailNotAllowed:'O serviço de email ainda não consegue enviar para este endereço. Peça ao gestor para configurar o envio de emails (ver README) ou para repor a palavra-passe no Supabase.',
+    enterEmail:'Introduza o seu email.'
   }
 };
 const LANG_KEY = 'ananga-lang';
@@ -504,6 +594,8 @@ const t = (k, vars) => { let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || 
   if (vars) for (const v in vars) s = s.replace('{' + v + '}', vars[v]); return s; };
 
 function applyLang(){
+  paintEyes();
+  if ($('changePwBtn')) { $('changePwBtn').title = t('changePw'); $('changePwBtn').setAttribute('aria-label', t('changePw')); }
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
   document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
@@ -542,7 +634,11 @@ if (SUPABASE_URL) {
   catch(e) { CONFIG_ERROR = 'SUPABASE_URL is not a valid web address.'; }
 }
 const LIVE = Boolean(BASE_URL && SUPABASE_ANON_KEY && window.supabase && !CONFIG_ERROR);
-const sb = LIVE ? window.supabase.createClient(BASE_URL, SUPABASE_ANON_KEY.trim()) : null;
+/* Password-reset links arrive as admin.html#...type=recovery (or #...error_code=otp_expired when expired) */
+const LINK_HASH = location.hash || '';
+const RECOVERY = /type=recovery/.test(LINK_HASH);
+const LINK_ERROR = (LINK_HASH.match(/error_code=([^&]+)/) || [])[1] || '';
+const sb = LIVE ? window.supabase.createClient(BASE_URL, SUPABASE_ANON_KEY.trim(), { auth: { flowType: 'implicit', detectSessionInUrl: true } }) : null;
 
 const api = LIVE ? {
   async session(){ const { data } = await sb.auth.getSession(); return data.session; },
@@ -553,6 +649,18 @@ const api = LIVE ? {
   },
   async isStaff(){ const { data, error } = await sb.rpc('is_staff'); if (error) throw error; return data === true; },
   async signOut(){ await sb.auth.signOut(); },
+  async sendReset(email){
+    const redirectTo = location.origin + location.pathname;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+  },
+  async setPassword(pw){ const { error } = await sb.auth.updateUser({ password: pw }); if (error) throw error; },
+  async checkPassword(pw){
+    const { data } = await sb.auth.getSession();
+    const email = data.session && data.session.user ? data.session.user.email : '';
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw Object.assign(new Error(t('wrongCurrent')), { friendly:true });
+  },
   async list(){ const { data, error } = await sb.rpc('staff_bookings', { p_from:null, p_to:null }); if (error) throw error; return data; },
   async payments(ref){ const { data, error } = await sb.rpc('staff_payments', { p_reference: ref }); if (error) throw error; return data; },
   async setStatus(ref, status){ const { error } = await sb.rpc('update_booking_status', { p_reference: ref, p_status: status }); if (error) throw error; },
@@ -604,6 +712,9 @@ function demoApi(){
     async signIn(email){ await wait(); signedIn = true; return { user:{ email: email || 'demo@hotel-ananga' } }; },
     async isStaff(){ return true; },
     async signOut(){ signedIn = false; },
+    async sendReset(){ await wait(); },
+    async setPassword(){ await wait(); },
+    async checkPassword(){ await wait(); },
     async list(){ await wait(); return rows.map(r => ({...r})); },
     async payments(ref){ return (pays[ref] || []).map(p => ({...p})); },
     async setStatus(ref, status){ await wait(); rows.find(r => r.reference === ref).status = status; },
@@ -642,6 +753,10 @@ function errText(err){
   if (/Refund is larger/i.test(m)) return t('errRefund');
   if (/Not authorized|JWT/i.test(m)) return t('errAuth');
   if (/Only managers/i.test(m)) return t('errManager');
+  if (/different from the old password/i.test(m)) return t('samePw');
+  if (/rate limit|For security purposes|too many/i.test(m)) return t('rateLimit');
+  if (/Email address not authorized/i.test(m)) return t('emailNotAllowed');
+  if (/should be at least|weak password|Password should/i.test(m)) return t('pwShort');
   if (/Enter a room name/i.test(m)) return t('errRoomName');
   if (m && m.length < 160) return m;
   console.error(err);
@@ -664,6 +779,11 @@ async function start(){
   $('loginDemo').hidden = LIVE;
   $('appDemo').hidden = LIVE;
   if (CONFIG_ERROR) { showLogin(); showBox('loginError', 'Setup problem: ' + CONFIG_ERROR); return; }
+  if (LINK_ERROR) {
+    history.replaceState(null, '', location.pathname);
+    showLogin(); showPanel('forgot'); showBox('forgotError', t('linkExpired')); return;
+  }
+  if (RECOVERY) { showLogin(); showPanel('reset'); return; }
   try {
     const s = await api.session();
     if (s && await api.isStaff()) return enterApp(s);
@@ -671,6 +791,100 @@ async function start(){
   showLogin();
 }
 function showLogin(){ $('loginView').hidden = false; $('appView').hidden = true; }
+function showPanel(name){
+  ['login','forgot','reset'].forEach(n => $('panel' + n[0].toUpperCase() + n.slice(1)).hidden = n !== name);
+  ['loginError','loginOk','forgotError','forgotOk','resetError'].forEach(id => showBox(id, ''));
+  const focus = { login:'email', forgot:'fEmail', reset:'rPw1' }[name];
+  setTimeout(() => $(focus) && $(focus).focus(), 0);
+}
+
+/* ---------- Show / hide password (eye buttons) ---------- */
+function paintEyes(){
+  document.querySelectorAll('[data-eye]').forEach(b => {
+    const shown = b.previousElementSibling.type === 'text';
+    b.setAttribute('aria-label', t(shown ? 'hidePw' : 'showPw')); b.title = t(shown ? 'hidePw' : 'showPw');
+    b.setAttribute('aria-pressed', shown);
+    b.innerHTML = shown
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.1 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.1-1.6"/><path d="M3 3l18 18"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  });
+}
+document.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => {
+  const inp = b.previousElementSibling; inp.type = inp.type === 'password' ? 'text' : 'password';
+  paintEyes(); inp.focus();
+}));
+function hideAllPasswords(){ document.querySelectorAll('[data-eye]').forEach(b => b.previousElementSibling.type = 'password'); paintEyes(); }
+
+/* ---------- Forgot password ---------- */
+$('forgotLink').addEventListener('click', () => { $('fEmail').value = $('email').value.trim(); showPanel('forgot'); });
+document.querySelectorAll('[data-to-login]').forEach(b => b.addEventListener('click', () => showPanel('login')));
+$('forgotForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showBox('forgotError', ''); showBox('forgotOk', '');
+  const email = $('fEmail').value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showBox('forgotError', t('enterEmail'));
+  const btn = $('forgotBtn'); btn.disabled = true;
+  try { await api.sendReset(email); showBox('forgotOk', t('linkSent', { email })); }
+  catch(err) { showBox('forgotError', errText(err)); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------- New password from the email link ---------- */
+function checkNewPw(a, b){
+  if (a.length < 8) return t('pwShort');
+  if (a !== b) return t('pwMismatch');
+  return '';
+}
+$('resetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showBox('resetError', '');
+  const p1 = $('rPw1').value, p2 = $('rPw2').value, bad = checkNewPw(p1, p2);
+  if (bad) return showBox('resetError', bad);
+  const btn = $('resetBtn'); btn.disabled = true;
+  try {
+    const s = await api.session();
+    if (!s) throw Object.assign(new Error(t('linkExpired')), { friendly:true });
+    await api.setPassword(p1);
+    history.replaceState(null, '', location.pathname);
+    $('rPw1').value = $('rPw2').value = ''; hideAllPasswords();
+    if (await api.isStaff()) { await enterApp(s); showBox('appOk', t('pwSaved')); setTimeout(() => showBox('appOk', ''), 6000); }
+    else { await api.signOut(); showPanel('login'); showBox('loginOk', t('pwSavedLogin')); }
+  } catch(err) { showBox('resetError', errText(err)); }
+  finally { btn.disabled = false; }
+});
+if (sb) sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') { showLogin(); showPanel('reset'); } });
+
+/* ---------- Change password (signed in) ---------- */
+function openPw(){
+  ['cPw0','cPw1','cPw2'].forEach(id => $(id).value = ''); hideAllPasswords();
+  showBox('pwError', ''); showBox('pwOk', '');
+  $('overlay').hidden = false; $('pwDialog').hidden = false; document.body.style.overflow = 'hidden';
+  setTimeout(() => $('cPw0').focus(), 0);
+}
+function closePw(){
+  $('pwDialog').hidden = true;
+  if (!current && !editingRoom) { $('overlay').hidden = true; document.body.style.overflow = ''; }
+}
+$('changePwBtn').addEventListener('click', openPw);
+$('changePwBtn').title = 'Change password';
+$('closePw').addEventListener('click', closePw);
+$('pwForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  showBox('pwError', ''); showBox('pwOk', '');
+  const p0 = $('cPw0').value, p1 = $('cPw1').value, p2 = $('cPw2').value;
+  if (!p0) return showBox('pwError', t('wrongCurrent'));
+  const bad = checkNewPw(p1, p2); if (bad) return showBox('pwError', bad);
+  if (p0 === p1) return showBox('pwError', t('samePw'));
+  const btn = $('pwBtn'); btn.disabled = true;
+  try {
+    await api.checkPassword(p0);
+    await api.setPassword(p1);
+    ['cPw0','cPw1','cPw2'].forEach(id => $(id).value = ''); hideAllPasswords();
+    showBox('pwOk', t('pwSaved'));
+    setTimeout(closePw, 1500);
+  } catch(err) { showBox('pwError', errText(err)); }
+  finally { btn.disabled = false; }
+});
 function showBox(id, msg){ const b = $(id); b.textContent = msg || ''; b.hidden = !msg; }
 
 $('loginForm').addEventListener('submit', async e => {
@@ -701,7 +915,7 @@ async function enterApp(session){
 }
 
 $('signOutBtn').addEventListener('click', async () => {
-  await api.signOut(); bookings = []; rooms = []; closeDrawer(); closeRoom(); showLogin();
+  await api.signOut(); bookings = []; rooms = []; closeDrawer(); closeRoom(); closePw(); hideAllPasswords(); showLogin(); showPanel('login');
 });
 
 /* ---------- Load + render ---------- */
@@ -847,8 +1061,8 @@ function closeDrawer(){
   current = null; $('overlay').hidden = true; $('drawer').hidden = true; document.body.style.overflow = '';
 }
 $('closeDrawer').addEventListener('click', closeDrawer);
-$('overlay').addEventListener('click', () => { closeDrawer(); closeRoom(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (current) closeDrawer(); if (editingRoom) closeRoom(); } });
+$('overlay').addEventListener('click', () => { closeDrawer(); closeRoom(); closePw(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (current) closeDrawer(); if (editingRoom) closeRoom(); if (!$('pwDialog').hidden) closePw(); } });
 
 async function changeStatus(b, status, btn){
   if (status === 'cancelled' && !confirm(t('noShowCancel'))) return;

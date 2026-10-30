@@ -171,8 +171,10 @@
       <nav>
         <ul id="menu">
           <li><a href="index.html" data-i18n="navHome">Home</a></li>
-          <li><a href="index.html#rooms" data-i18n="navRooms">Rooms</a></li>
-          <li><a href="index.html#contact" data-i18n="navContact">Contact</a></li>
+          <li><a href="rooms.html" data-i18n="navRooms">Rooms</a></li>
+          <li><a href="facilities.html" data-i18n="navFacilities">Facilities</a></li>
+          <li><a href="gallery.html" data-i18n="navGallery">Gallery</a></li>
+          <li><a href="contact.html" data-i18n="navContact">Contact</a></li>
           <li><a href="booking.html" aria-current="page" data-i18n="navBooking">Rooms &amp; Booking</a></li>
         </ul>
       </nav>
@@ -279,8 +281,9 @@
     <a class="brand" href="index.html">Hotel <span style="color:var(--brass)">Ananga</span></a>
     <ul>
       <li><a href="index.html" data-i18n="navHome">Home</a></li>
+      <li><a href="rooms.html" data-i18n="navRooms">Rooms</a></li>
       <li><a href="booking.html" data-i18n="navBooking">Rooms &amp; Booking</a></li>
-      <li><a href="index.html#contact" data-i18n="navContact">Contact</a></li>
+      <li><a href="contact.html" data-i18n="navContact">Contact</a></li>
       <li><a href="admin.html" data-i18n="navStaff">Staff</a></li>
     </ul>
     <div>&copy; <span id="year"></span> Hotel Ananga. <span data-i18n="rights">All rights reserved.</span></div>
@@ -318,7 +321,7 @@ const EMAIL_SETTINGS = {
 /* ---------- Languages ---------- */
 const I18N = {
   en: {
-    navHome:'Home', navRooms:'Rooms', navContact:'Contact', navBooking:'Rooms & Booking', navStaff:'Staff',
+    navHome:'Home', navRooms:'Rooms', navFacilities:'Facilities', navGallery:'Gallery', navContact:'Contact', navBooking:'Rooms & Booking', navStaff:'Staff',
     eyebrow:'Reservations', title:'Book your stay', intro:'Choose your dates to see which rooms are available, then reserve in a few simple steps.',
     checkIn:'Check-in', checkOut:'Check-out', guests:'Guests', checkAvail:'Check Availability', wait:'Please wait',
     demo:'Demo mode: the booking database is not connected yet, so rooms shown are sample data and reservations are not saved.',
@@ -359,7 +362,7 @@ const I18N = {
     mailGuest:'Guest', mailEmail:'Email', mailPhone:'Phone', mailRequests:'Requests', mailOpenAdmin:'Open the staff page'
   },
   pt: {
-    navHome:'Início', navRooms:'Quartos', navContact:'Contacto', navBooking:'Quartos e Reservas', navStaff:'Equipa',
+    navHome:'Início', navRooms:'Quartos', navFacilities:'Instalações', navGallery:'Galeria', navContact:'Contacto', navBooking:'Quartos e Reservas', navStaff:'Equipa',
     eyebrow:'Reservas', title:'Reserve a sua estadia', intro:'Escolha as datas para ver os quartos disponíveis e reserve em poucos passos.',
     checkIn:'Entrada', checkOut:'Saída', guests:'Hóspedes', checkAvail:'Ver disponibilidade', wait:'Aguarde',
     demo:'Modo de demonstração: a base de dados de reservas ainda não está ligada. Os quartos são exemplos e as reservas não são guardadas.',
@@ -755,6 +758,22 @@ const mb = $('menuBtn'), menu = $('menu');
 mb.addEventListener('click', () => mb.setAttribute('aria-expanded', menu.classList.toggle('open')));
 applyLang();
 if (CONFIG_ERROR) showError(CONFIG_ERROR);
+
+/* Dates chosen in the homepage booking bar: booking.html?in=YYYY-MM-DD&out=YYYY-MM-DD&guests=2 */
+(function prefillFromLink(){
+  const q = new URLSearchParams(location.search);
+  const ci = q.get('in'), co = q.get('out'), g = parseInt(q.get('guests') || '', 10);
+  const okDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '');
+  if (g >= 1) {
+    const sel = $('guests');
+    if (![...sel.options].some(o => +o.value === g || +o.text === g)) sel.add(new Option(String(g), String(g)));
+    sel.value = String(g);
+  }
+  if (okDate(ci) && okDate(co) && ci >= today && co > ci) {
+    $('checkIn').value = ci; $('checkOut').min = addDays(ci, 1); $('checkOut').value = co;
+    if (!CONFIG_ERROR) $('searchForm').requestSubmit ? $('searchForm').requestSubmit() : $('searchBtn').click();
+  }
+})();
 </script>
 </body>
 </html>

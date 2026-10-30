@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms & Suites — Hotel Ananga</title>
+<meta name="description" content="Rooms and suites at Hotel Ananga, with live prices and online booking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1f2a27; --muted:#5d6b66; --paper:#faf7f1; --sand:#efe7d8; --line:#e2d8c6;
+    --forest:#1e4d43; --forest-dark:#12302a; --brass:#b08a4a; --gold:#e3c995; --white:#fff;
+    --max:1200px; --serif:"Cormorant Garamond", Georgia, serif; --sans:"Inter", system-ui, sans-serif;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.65;font-size:16px;overflow-x:hidden}
+  img,video{display:block;max-width:100%}
+  a{color:inherit}
+  button{font:inherit;cursor:pointer}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.12}
+  .eyebrow{font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;color:var(--brass);font-weight:600}
+  /* brand colour bar under titles */
+  .bar{display:flex;gap:4px;margin:16px 0 18px}
+  .bar i{display:block;height:3px;border-radius:2px}
+  .bar i:nth-child(1){width:46px;background:var(--forest)}
+  .bar i:nth-child(2){width:22px;background:var(--brass)}
+  .bar i:nth-child(3){width:10px;background:var(--gold)}
+  .center .bar{justify-content:center}
+
+  .btn{display:inline-flex;align-items:center;gap:10px;background:var(--forest);color:var(--white);padding:14px 28px;border:0;border-radius:2px;text-decoration:none;font-weight:600;font-size:.86rem;letter-spacing:.12em;text-transform:uppercase;transition:background .3s,color .3s,border-color .3s}
+  .btn:hover{background:var(--forest-dark)}
+  .btn.line{background:transparent;color:var(--forest);border:1px solid var(--forest)}
+  .btn.line:hover{background:var(--forest);color:var(--white)}
+  .btn.light{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.7)}
+  .btn.light:hover{background:var(--white);color:var(--forest)}
+  .btn .play-ico{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center}
+  .btn .play-ico::before{content:"";border-left:7px solid currentColor;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;margin-left:2px}
+
+  /* ---------- Header ---------- */
+  header.site{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .4s,box-shadow .4s,color .4s;color:var(--white)}
+  header.site.solid{background:rgba(250,247,241,.97);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+  header.site.menu-open .menu-toggle{color:#fff;border-color:rgba(255,255,255,.6)}
+  .menu-shade{position:fixed;inset:0;background:rgba(6,14,12,.5);z-index:55;opacity:0;pointer-events:none;transition:opacity .4s}
+  .menu-shade.on{opacity:1;pointer-events:auto}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:84px;transition:height .4s}
+  header.site.solid .nav{height:68px}
+  .brand{font-family:var(--serif);font-size:1.7rem;font-weight:700;text-decoration:none;letter-spacing:.04em;color:inherit;line-height:1}
+  .brand span{color:var(--gold)}
+  header.site.solid .brand{color:var(--forest)} header.site.solid .brand span{color:var(--brass)}
+  .brand small{display:block;font-family:var(--sans);font-size:.58rem;letter-spacing:.42em;font-weight:500;opacity:.8;margin-top:4px}
+  nav.main ul{list-style:none;display:flex;gap:30px;align-items:center}
+  nav.main a{text-decoration:none;font-size:.84rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500;position:relative;padding:6px 0}
+  nav.main a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;transform:scaleX(0);transition:transform .35s var(--ease)}
+  nav.main a:hover::after{transform:scaleX(1)}
+  .tools{display:flex;align-items:center;gap:14px}
+  .lang{display:inline-flex;border:1px solid currentColor;border-radius:999px;overflow:hidden;opacity:.9}
+  .lang button{border:0;background:transparent;color:inherit;padding:5px 11px;font-size:.74rem;font-weight:600;letter-spacing:.06em}
+  .lang button.on{background:var(--white);color:var(--forest)}
+  header.site.solid .lang button.on{background:var(--forest);color:var(--white)}
+  .icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid currentColor;background:transparent;color:inherit;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+  .icon-btn svg{width:18px;height:18px}
+  .menu-toggle{display:none}
+
+  /* ---------- Hero slideshow ---------- */
+  .hero{position:relative;height:100vh;min-height:620px;overflow:hidden;background:var(--forest-dark);color:var(--white)}
+  .slide{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease;z-index:1}
+  .slide.on{opacity:1;z-index:2}
+  .slide .img{position:absolute;inset:-2%;background-size:cover;background-position:center;transform:scale(1.02);will-change:transform}
+  .slide.on .img{animation:kenburns 9s ease-out forwards}
+  .slide:nth-child(even).on .img{animation-name:kenburns2}
+  @keyframes kenburns{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.14) translate(-1.5%,-1%)}}
+  @keyframes kenburns2{from{transform:scale(1.14) translate(1.5%,1%)}to{transform:scale(1.02) translate(0,0)}}
+  /* tinted fallback when a photo is not uploaded yet */
+  .slide .img.fallback{background-image:radial-gradient(ellipse at 30% 20%,rgba(227,201,149,.35),transparent 55%),linear-gradient(135deg,var(--c1),var(--c2))}
+  .hero::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(to bottom,rgba(8,20,17,.55) 0%,rgba(8,20,17,.08) 30%,rgba(8,20,17,.15) 60%,rgba(8,20,17,.72) 100%);pointer-events:none}
+  .hero-text{position:absolute;z-index:4;left:0;right:0;top:50%;transform:translateY(-58%);text-align:center;padding:0 20px}
+  .hero-text .eyebrow{color:var(--gold);letter-spacing:.42em}
+  .hero-text h1{font-size:clamp(3rem,8vw,6.2rem);font-weight:500;letter-spacing:.06em;margin:14px 0 10px;text-shadow:0 2px 30px rgba(0,0,0,.25)}
+  .hero-text p{font-family:var(--serif);font-style:italic;font-size:clamp(1.15rem,2.2vw,1.55rem);opacity:.95;max-width:640px;margin:0 auto 32px}
+  .hero-text .cap{transition:opacity .6s ease,transform .6s ease}
+  .hero-text .cap.swap{opacity:0;transform:translateY(10px)}
+  .hero-ctrl{position:absolute;z-index:5;left:0;right:0;bottom:150px;display:flex;justify-content:center;align-items:center;gap:22px}
+  .arrow{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:rgba(0,0,0,.12);color:#fff;display:flex;align-items:center;justify-content:center;transition:background .3s}
+  .arrow:hover{background:rgba(255,255,255,.18)}
+  .arrow svg{width:18px;height:18px}
+  .dots{display:flex;gap:10px}
+  .dots button{width:34px;height:3px;border:0;background:rgba(255,255,255,.35);padding:0;position:relative;overflow:hidden}
+  .dots button.on::after{content:"";position:absolute;inset:0;background:#fff;transform-origin:left;animation:progress var(--dur,6s) linear forwards}
+  .hero.paused .dots button.on::after{animation-play-state:paused}
+  @keyframes progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .scroll-cue{position:absolute;z-index:5;right:34px;bottom:160px;writing-mode:vertical-rl;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;opacity:.75;display:flex;align-items:center;gap:12px}
+  .scroll-cue::after{content:"";width:1px;height:54px;background:linear-gradient(#fff,transparent);animation:cue 2s ease-in-out infinite}
+  @keyframes cue{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+  /* ---------- Booking bar ---------- */
+  .booking-bar{position:relative;z-index:20;margin-top:-104px}
+  .bb{background:var(--white);box-shadow:0 30px 60px -30px rgba(10,30,26,.45);display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:stretch}
+  .bb-item{position:relative;padding:22px 28px;border-right:1px solid var(--line);cursor:pointer}
+  .bb-item .t{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .bb-date{display:flex;align-items:center;gap:12px}
+  .bb-date .d{font-family:var(--serif);font-size:3rem;line-height:1;color:var(--forest);font-weight:600}
+  .bb-date .mw{font-size:.86rem;line-height:1.35;color:var(--ink)}
+  .bb-date .mw span{display:block;color:var(--muted);font-size:.8rem}
+  .bb-item input[type=date]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:0}
+  .bb-item input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+  .bb-guests{display:flex;align-items:center;gap:14px}
+  .bb-guests button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--forest);font-size:1.2rem;line-height:1}
+  .bb-guests button:hover{border-color:var(--forest)}
+  .bb-guests .n{font-family:var(--serif);font-size:3rem;line-height:1;color:var(--forest);font-weight:600;min-width:52px;text-align:center}
+  .bb-submit{border:0;background:var(--forest);color:#fff;padding:0 40px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:.84rem;transition:background .3s}
+  .bb-submit:hover{background:var(--forest-dark)}
+  .bb-nights{position:absolute;left:0;top:50%;transform:translate(-50%,-50%);background:var(--brass);color:#fff;font-size:.72rem;font-weight:600;letter-spacing:.08em;padding:4px 12px;border-radius:999px;white-space:nowrap;z-index:2}
+
+  /* ---------- Sections ---------- */
+  section.block{padding:120px 0}
+  .title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:46px}
+  .title-row h2,.about h2{font-size:clamp(2.2rem,4.4vw,3.5rem)}
+  .title-row p{color:var(--muted);max-width:480px}
+  .link-arrow{display:inline-flex;align-items:center;gap:10px;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--forest);text-decoration:none}
+  .link-arrow::after{content:"→";transition:transform .3s}
+  .link-arrow:hover::after{transform:translateX(5px)}
+
+  .about{display:grid;grid-template-columns:1fr 1.05fr;gap:80px;align-items:center}
+  .about p{color:var(--muted);margin-bottom:16px;font-size:1.04rem}
+  .about .actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+  .about-media{position:relative;aspect-ratio:4/5}
+  .about-media .ph{position:absolute;overflow:hidden}
+  .about-media .ph:first-child{inset:0 18% 12% 0}
+  .about-media .ph:last-child{right:0;bottom:0;width:48%;aspect-ratio:1;border:10px solid var(--paper)}
+  .stats{display:flex;gap:44px;margin-top:34px;padding-top:28px;border-top:1px solid var(--line)}
+  .stats strong{display:block;font-family:var(--serif);font-size:2.4rem;color:var(--forest);line-height:1}
+  .stats span{font-size:.78rem;color:var(--muted);letter-spacing:.06em}
+
+  /* photo with zoom-on-hover + placeholder */
+  .ph{position:relative;overflow:hidden;background:linear-gradient(135deg,#d9cdb6,#c2b293)}
+  .ph::before{content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;letter-spacing:.06em;color:rgba(31,42,39,.5);padding:12px;text-align:center}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease)}
+  .zoom:hover .ph img,.zoom:focus-visible .ph img{transform:scale(1.08)}
+
+  /* Rooms: two-column zoom grid (no gutters) */
+  .rooms-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .room-tile{position:relative;display:block;aspect-ratio:16/10;color:#fff;text-decoration:none;overflow:hidden}
+  .room-tile .ph{position:absolute;inset:0}
+  .room-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(8,20,17,.78),rgba(8,20,17,0) 55%);transition:background .5s}
+  .room-tile:hover::after{background:linear-gradient(to top,rgba(8,20,17,.85),rgba(8,20,17,.15) 70%)}
+  .room-tile .info{position:absolute;left:32px;right:32px;bottom:28px;z-index:2;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+  .room-tile h3{font-size:clamp(1.5rem,2.4vw,2.1rem);font-weight:500}
+  .room-tile .meta{font-size:.82rem;letter-spacing:.06em;opacity:.85;margin-top:4px}
+  .room-tile .price{text-align:right;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;opacity:.9;white-space:nowrap}
+  .room-tile .price b{display:block;font-family:var(--serif);font-size:1.6rem;letter-spacing:0;text-transform:none;font-weight:600}
+  .room-tile .go{display:inline-block;margin-left:8px;transition:transform .4s var(--ease)}
+  .room-tile:hover .go{transform:translateX(6px)}
+
+  /* Parallax band */
+  .parallax{position:relative;height:72vh;min-height:420px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff}
+  .parallax .layer{position:absolute;left:0;right:0;top:-20%;height:140%;background-size:cover;background-position:center;will-change:transform}
+  .parallax .layer.fallback{background-image:linear-gradient(135deg,#2a5a4f,#12302a)}
+  .parallax::after{content:"";position:absolute;inset:0;background:rgba(8,20,17,.45)}
+  .parallax .q{position:relative;z-index:2;max-width:820px;padding:0 24px}
+  .parallax blockquote{font-family:var(--serif);font-style:italic;font-size:clamp(1.8rem,4vw,3rem);line-height:1.25}
+  .parallax .eyebrow{color:var(--gold);display:block;margin-bottom:18px}
+
+  /* Facilities */
+  .facilities{background:var(--sand)}
+  .fac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+  .fac{text-decoration:none;display:block}
+  .fac .ph{aspect-ratio:4/5}
+  .fac h3{font-size:1.75rem;margin:22px 0 8px}
+  .fac p{color:var(--muted);font-size:.96rem}
+
+  /* Video feature */
+  .video-feature{position:relative;height:78vh;min-height:460px;overflow:hidden;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer}
+  .video-feature .bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform 2s var(--ease)}
+  .video-feature .bg.fallback{background-image:radial-gradient(ellipse at 70% 30%,rgba(176,138,74,.35),transparent 60%),linear-gradient(135deg,#1e4d43,#0d231f)}
+  .video-feature video.ambient{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .video-feature:hover .bg{transform:scale(1.05)}
+  .video-feature::after{content:"";position:absolute;inset:0;background:rgba(8,20,17,.42)}
+  .video-feature .inner{position:relative;z-index:2}
+  .play-big{width:104px;height:104px;border-radius:50%;border:1.5px solid rgba(255,255,255,.85);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;margin:0 auto 26px;position:relative;transition:transform .4s var(--ease),background .4s}
+  .play-big::before{content:"";border-left:24px solid #fff;border-top:15px solid transparent;border-bottom:15px solid transparent;margin-left:7px}
+  .play-big::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(255,255,255,.5);animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{from{transform:scale(.85);opacity:1}to{transform:scale(1.35);opacity:0}}
+  .video-feature:hover .play-big{transform:scale(1.08);background:rgba(255,255,255,.18)}
+  .video-feature h2{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:500}
+  .video-feature p{opacity:.9;margin-top:8px;letter-spacing:.08em}
+
+  /* Gallery */
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:230px;gap:6px;grid-auto-flow:dense}
+  .gallery button{border:0;padding:0;background:none;position:relative}
+  .gallery button .ph{position:absolute;inset:0}
+  .gallery button:nth-child(6n+1){grid-column:span 2;grid-row:span 2}
+  .gallery button:nth-child(6n+3){grid-row:span 2}
+  .gallery button:nth-child(6n+5),.gallery button:nth-child(6n+6){grid-column:span 2}
+  .gallery button::after{content:"+";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:300;color:#fff;background:rgba(18,48,42,.38);opacity:0;transition:opacity .4s}
+  .gallery button:hover::after{opacity:1}
+
+  /* Location */
+  .location{display:grid;grid-template-columns:1fr 1.3fr;gap:0;background:var(--white);border:1px solid var(--line)}
+  .loc-info{padding:56px 52px}
+  .loc-info h2{font-size:clamp(2rem,3.6vw,2.8rem)}
+  .loc-info dl{display:grid;grid-template-columns:110px 1fr;gap:14px 18px;margin-top:8px;font-size:.96rem}
+  .loc-info dt{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-top:3px}
+  .loc-info dd a{color:var(--forest);text-decoration:none}
+  .loc-map{min-height:440px;position:relative}
+  .loc-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:grayscale(.25)}
+  .loc-map .ph{position:absolute;inset:0}
+
+  /* CTA */
+  .cta{text-align:center;padding:110px 0;background:var(--forest);color:#fff}
+  .cta h2{font-size:clamp(2.2rem,4.6vw,3.4rem);font-weight:500}
+  .cta p{opacity:.85;margin:10px auto 34px;max-width:520px}
+  .cta .eyebrow{color:var(--gold)}
+  .cta .btn{background:var(--white);color:var(--forest)}
+  .cta .btn:hover{background:var(--gold)}
+
+  /* Footer sitemap */
+  footer{background:var(--forest-dark);color:rgba(255,255,255,.72);font-size:.9rem}
+  .sitemap{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;padding:72px 0 56px}
+  .sitemap h4{font-family:var(--sans);font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;font-weight:600}
+  .sitemap a{display:block;text-decoration:none;margin-bottom:10px;transition:color .3s}
+  .sitemap a:hover{color:#fff}
+  .sitemap .brand{color:#fff;margin-bottom:18px;display:inline-block}
+  .social{display:flex;gap:10px;flex-wrap:wrap}
+  .social a{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;margin:0}
+  .social a:hover{border-color:#fff}
+  .social svg{width:17px;height:17px;fill:currentColor}
+  .copy{border-top:1px solid rgba(255,255,255,.1);padding:22px 0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.8rem}
+  .copy a{text-decoration:none;margin-right:18px}
+
+  /* ---------- Modals (video + lightbox) ---------- */
+  .modal{position:fixed;inset:0;z-index:100;background:rgba(6,14,12,.92);display:flex;align-items:center;justify-content:center;padding:60px 20px;opacity:0;pointer-events:none;transition:opacity .35s}
+  .modal.open{opacity:1;pointer-events:auto}
+  .modal .close{position:absolute;top:18px;right:22px;width:48px;height:48px;border:0;background:transparent;color:#fff;font-size:2.2rem;font-weight:300;line-height:1}
+  .video-box{width:min(1100px,100%);aspect-ratio:16/9;background:#000;position:relative;transform:scale(.96);transition:transform .35s var(--ease)}
+  .modal.open .video-box{transform:scale(1)}
+  .video-box video,.video-box iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .video-box .soon{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px;gap:8px}
+  .video-box .soon h3{font-size:2rem;font-weight:500}
+  .video-box .soon p{opacity:.75}
+  .lb-img{max-width:min(1200px,100%);max-height:82vh;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lb-ph{width:min(900px,100%);aspect-ratio:3/2}
+  .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff}
+  .lb-nav.prev{left:18px} .lb-nav.next{right:18px}
+  .lb-nav svg{width:20px;height:20px}
+  .lb-count{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:rgba(255,255,255,.7);font-size:.82rem;letter-spacing:.2em}
+
+  /* ---------- Reveal on scroll ---------- */
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.12s} .reveal.d2{transition-delay:.24s} .reveal.d3{transition-delay:.36s}
+  .reveal-img{clip-path:inset(0 0 100% 0);transition:clip-path 1.3s var(--ease)}
+  .reveal-img.in{clip-path:inset(0 0 0 0)}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1000px){
+    nav.main{position:fixed;inset:0 0 0 auto;width:min(340px,86vw);background:var(--forest-dark);color:#fff;padding:96px 34px 30px;transform:translateX(100%);transition:transform .45s var(--ease);z-index:70}
+    nav.main.open{transform:none}
+    nav.main ul{flex-direction:column;align-items:flex-start;gap:6px}
+    nav.main a{font-size:1rem;display:block;padding:10px 0}
+    .menu-toggle{display:inline-flex;position:relative;z-index:80}
+    .bb{grid-template-columns:1fr 1fr}
+    .bb-item:nth-child(2){border-right:0}
+    .bb-item:nth-child(3){border-top:1px solid var(--line)}
+    .bb-submit{grid-column:2;padding:20px;border-top:1px solid var(--line)}
+    .about{grid-template-columns:1fr;gap:50px}
+    .fac-grid{grid-template-columns:1fr 1fr}
+    .location{grid-template-columns:1fr}
+    .sitemap{grid-template-columns:1fr 1fr}
+    .gallery{grid-template-columns:repeat(2,1fr);grid-auto-rows:180px}
+    .gallery button:nth-child(n){grid-column:auto;grid-row:auto}
+    .gallery button:nth-child(6n+1),.gallery button:nth-child(6n+6){grid-column:span 2}
+    .scroll-cue{display:none}
+  }
+  @media (max-width:700px){
+    .wrap{padding:0 16px}
+    section.block{padding:80px 0}
+    .nav{height:68px}
+    .brand{font-size:1.4rem}
+    .tools .icon-btn.cal{display:none}
+    .lang button{padding:4px 9px}
+    .hero{min-height:560px;height:92svh}
+    .hero-ctrl{bottom:auto;top:calc(50% + 150px)}
+    .arrow{display:none}
+    .booking-bar{margin-top:-60px}
+    .bb{grid-template-columns:1fr 1fr}
+    .bb-item{padding:16px 16px}
+    .bb-date .d,.bb-guests .n{font-size:2.3rem}
+    .bb-date{gap:8px}
+    .bb-date .mw{font-size:.8rem}
+    .bb-nights{left:auto;right:12px;top:-11px;transform:none;font-size:.66rem;padding:3px 9px}
+    .bb-item:nth-child(3){grid-column:1/-1;border-right:0}
+    .bb-submit{grid-column:1/-1}
+    .rooms-grid{grid-template-columns:1fr}
+    .room-tile{aspect-ratio:4/3}
+    .room-tile .info{left:20px;right:20px;bottom:18px}
+    .fac-grid{grid-template-columns:1fr}
+    .fac .ph{aspect-ratio:4/3}
+    .loc-info{padding:36px 22px}
+    .loc-info dl{grid-template-columns:1fr;gap:2px}
+    .loc-info dd{margin-bottom:12px}
+    .sitemap{grid-template-columns:1fr;gap:28px;padding:54px 0 36px}
+    .parallax,.video-feature{height:60vh}
+    .lb-nav{display:none}
+    .stats{gap:26px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    .reveal,.reveal-img{opacity:1;transform:none;clip-path:none}
+  }
+
+  /* ---------- Inner-page banner (Rooms, Facilities, Gallery, Contact) ---------- */
+  .page-hero{position:relative;height:64vh;min-height:440px;max-height:680px;overflow:hidden;color:#fff;background:var(--forest-dark);display:flex;align-items:flex-end}
+  .page-hero .img{position:absolute;inset:-2%;background-size:cover;background-position:center;animation:kenburns 16s ease-out forwards}
+  .page-hero .img.fallback{background-image:radial-gradient(ellipse at 70% 20%,rgba(227,201,149,.3),transparent 55%),linear-gradient(135deg,#2a5a4f,#0f2a25)}
+  .page-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,20,17,.55) 0%,rgba(8,20,17,.1) 40%,rgba(8,20,17,.72) 100%)}
+  .page-hero .wrap{position:relative;z-index:2;width:100%;padding-bottom:64px}
+  .crumbs{display:flex;gap:10px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:14px;list-style:none}
+  .crumbs a{text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs li+li::before{content:"/";margin-right:10px;opacity:.6}
+  .page-hero h1{font-size:clamp(2.8rem,6.5vw,5rem);font-weight:500;letter-spacing:.03em}
+  .page-hero p{font-family:var(--serif);font-style:italic;font-size:clamp(1.1rem,2vw,1.4rem);opacity:.92;margin-top:6px;max-width:640px}
+  .page-hero.with-bar .wrap{padding-bottom:140px}
+
+  nav.main a[aria-current="page"]::after{transform:scaleX(1)}
+
+  /* intro paragraph under banners */
+  .intro{max-width:760px}
+  .intro h2{font-size:clamp(2rem,4vw,3rem)}
+  .intro p{color:var(--muted);font-size:1.05rem;margin-top:6px}
+
+  /* Facilities: alternating feature rows */
+  .feature{display:grid;grid-template-columns:1.15fr 1fr;gap:80px;align-items:center;margin-top:100px}
+  .feature .ph{aspect-ratio:4/3}
+  .feature.rev{grid-template-columns:1fr 1.15fr}
+  .feature.rev .ph{order:2}
+  /* odd number of rooms: last one spans the full width */
+  .rooms-grid .room-tile:last-child:nth-child(odd){grid-column:1/-1;aspect-ratio:32/10}
+  .feature .num{font-family:var(--serif);font-size:4.5rem;line-height:1;color:var(--line);font-weight:600}
+  .feature h3{font-size:clamp(2rem,3.4vw,2.8rem);margin:6px 0 4px}
+  .feature p{color:var(--muted);font-size:1.03rem}
+
+  /* "included" list */
+  .inc{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:40px}
+  .inc div{background:var(--paper);padding:30px 26px}
+  .inc b{display:block;font-family:var(--serif);font-size:1.45rem;font-weight:600;color:var(--forest);margin-bottom:4px}
+  .inc span{color:var(--muted);font-size:.92rem}
+  .inc svg{width:30px;height:30px;stroke:var(--brass);fill:none;stroke-width:1.4;margin-bottom:14px}
+
+  /* Contact page buttons */
+  .contact-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+
+
+  @media (max-width:1000px){
+    .feature{grid-template-columns:1fr;gap:30px;margin-top:70px}
+    .feature.rev{grid-template-columns:1fr}
+    .feature.rev .ph{order:0}
+    .inc{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:700px){
+    .page-hero{height:56vh;min-height:380px}
+    .page-hero .wrap{padding-bottom:44px}
+    .page-hero.with-bar .wrap{padding-bottom:110px}
+    .inc div{padding:22px 18px}
+    .rooms-grid .room-tile:last-child:nth-child(odd){aspect-ratio:4/3}
+  }
+</style>
+</head>
+<body data-page="rooms" data-title="roomsPageT">
+
+<!-- ===================== HEADER ===================== -->
+<header class="site" id="siteHeader">
+  <div class="wrap nav">
+    <a class="brand" href="index.html">Hotel <span>Ananga</span><small>MOÇAMBIQUE</small></a>
+    <nav class="main" id="mainNav" aria-label="Main">
+      <ul>
+        <li><a href="index.html#about" data-i18n="navAbout">About</a></li>
+        <li><a href="rooms.html" data-i18n="navRooms" aria-current="page">Rooms</a></li>
+        <li><a href="facilities.html" data-i18n="navFacilities">Facilities</a></li>
+        <li><a href="gallery.html" data-i18n="navGallery">Gallery</a></li>
+        <li><a href="contact.html" data-i18n="navContact">Contact</a></li>
+        <li><a href="booking.html" data-i18n="navBook">Book a Stay</a></li>
+      </ul>
+    </nav>
+    <div class="tools">
+      <div class="lang" data-lang-switch></div>
+      <a class="icon-btn cal" href="#bookingBar" aria-label="Booking" title="Booking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </a>
+      <button class="icon-btn menu-toggle" id="menuBtn" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== PAGE BANNER ===================== -->
+<section class="page-hero with-bar">
+  <div class="img fallback" data-src="graph/room-deluxe.jpg"></div>
+  <div class="wrap">
+    <ol class="crumbs"><li><a href="index.html" data-i18n="navHome">Home</a></li><li data-i18n="navRooms">Rooms &amp; Suites</li></ol>
+    <h1 data-i18n="roomsPageT">Rooms &amp; Suites</h1>
+    <p data-i18n="roomsPageS">Comfortable rooms designed for restful nights.</p>
+  </div>
+</section>
+
+<!-- ===================== BOOKING BAR ===================== -->
+<div class="booking-bar wrap" id="bookingBar">
+  <form class="bb" id="bbForm">
+    <label class="bb-item">
+      <div class="t" data-i18n="checkIn">Check-in</div>
+      <div class="bb-date"><span class="d" id="inD"></span><span class="mw" id="inMW"></span></div>
+      <input type="date" id="bbIn" aria-label="Check-in">
+    </label>
+    <label class="bb-item">
+      <div class="bb-nights" id="bbNights"></div>
+      <div class="t" data-i18n="checkOut">Check-out</div>
+      <div class="bb-date"><span class="d" id="outD"></span><span class="mw" id="outMW"></span></div>
+      <input type="date" id="bbOut" aria-label="Check-out">
+    </label>
+    <div class="bb-item" style="cursor:default">
+      <div class="t" data-i18n="guests">Guests</div>
+      <div class="bb-guests">
+        <button type="button" id="gMinus" aria-label="−">−</button>
+        <span class="n" id="gN">02</span>
+        <button type="button" id="gPlus" aria-label="+">+</button>
+      </div>
+    </div>
+    <button class="bb-submit" type="submit" data-i18n="bookNow">Book a room now</button>
+  </form>
+</div>
+
+<!-- ===================== ROOM LIST ===================== -->
+<section class="block">
+  <div class="wrap">
+    <div class="title-row">
+      <div class="intro">
+        <div class="eyebrow reveal" data-i18n="navRooms">Rooms</div>
+        <h2 class="reveal d1" data-i18n="roomsIntroT">Choose the room that suits your stay</h2>
+        <div class="bar reveal d1"><i></i><i></i><i></i></div>
+        <p class="reveal d2" data-i18n="roomsText">All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping.</p>
+      </div>
+    </div>
+    <div class="rooms-grid" id="roomsGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== INCLUDED ===================== -->
+<section class="block facilities">
+  <div class="wrap">
+    <div class="title-row">
+      <div class="intro">
+        <div class="eyebrow reveal" data-i18n="incEyebrow">Every room</div>
+        <h2 class="reveal d1" data-i18n="incTitle">Included in your stay</h2>
+        <div class="bar reveal d1"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div class="inc">
+      <div class="reveal"><svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0"/><circle cx="12" cy="19.5" r="1"/></svg><b data-i18n="inc1">Free Wi-Fi</b><span data-i18n="inc1d">Fast connection in every room</span></div>
+      <div class="reveal"><svg viewBox="0 0 24 24"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1L19.1 4.9"/></svg><b data-i18n="inc2">Air conditioning</b><span data-i18n="inc2d">Cool and quiet, day and night</span></div>
+      <div class="reveal"><svg viewBox="0 0 24 24"><path d="M3 12h18v3a5 5 0 01-5 5H8a5 5 0 01-5-5v-3zM5 12V5a2 2 0 012-2 2 2 0 012 2"/></svg><b data-i18n="inc3">En-suite bathroom</b><span data-i18n="inc3d">Private bathroom with shower</span></div>
+      <div class="reveal"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M9 9l6 6M14 4l6 6-8 8-6-6z"/></svg><b data-i18n="inc4">Daily housekeeping</b><span data-i18n="inc4d">Fresh room every day</span></div>
+    </div>
+    <div class="stats reveal" style="border-top:0;margin-top:40px;flex-wrap:wrap">
+      <div><span class="eyebrow" data-i18n="polT">Good to know</span></div>
+      <div><span data-i18n="pol1">Check-in from 14:00</span></div>
+      <div><span data-i18n="pol2">Check-out until 11:00</span></div>
+      <div><span data-i18n="pol3">Pay on arrival, or by M-Pesa, e-Mola or bank transfer</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta">
+  <div class="wrap reveal">
+    <div class="eyebrow" data-i18n="ctaEyebrow">Reservations</div>
+    <h2 data-i18n="ctaTitle">Ready to plan your stay?</h2>
+    <p data-i18n="ctaText">Check live availability and reserve your room in a few minutes.</p>
+    <a class="btn" href="booking.html" data-i18n="ctaBtn">Book now</a>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap sitemap">
+    <div>
+      <a class="brand" href="index.html">Hotel <span>Ananga</span></a>
+      <div id="footContact"></div>
+    </div>
+    <div>
+      <h4 data-i18n="footHotel">Hotel</h4>
+      <a href="index.html#about" data-i18n="navAbout">About</a>
+      <a href="rooms.html" data-i18n="navRooms">Rooms</a>
+      <a href="facilities.html" data-i18n="navFacilities">Facilities</a>
+      <a href="gallery.html" data-i18n="navGallery">Gallery</a>
+    </div>
+    <div>
+      <h4 data-i18n="footServices">Services</h4>
+      <a href="booking.html" data-i18n="navBooking">Rooms &amp; Booking</a>
+      <a href="contact.html" data-i18n="navContact">Contact</a>
+      <a href="admin.html" data-i18n="navStaff">Staff</a>
+    </div>
+    <div>
+      <h4 data-i18n="footFollow">Follow us</h4>
+      <div class="social" id="socialLinks"></div>
+    </div>
+  </div>
+  <div class="wrap copy">
+    <div>&copy; <span id="year"></span> Hotel Ananga. <span data-i18n="rights">All rights reserved.</span></div>
+    <div data-i18n="footNote">Online booking · Pay on arrival or by mobile money</div>
+  </div>
+</footer>
+
+<!-- ===================== VIDEO POPUP ===================== -->
+<div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-label="Video">
+  <button class="close" data-close aria-label="Close">&times;</button>
+  <div class="video-box" id="videoBox"></div>
+</div>
+
+<script>
+/* =====================================================================
+   SITE SETTINGS — the same block is in every page (index, rooms,
+   facilities, gallery, contact). If you change one, change them all,
+   or send the change to Claude.
+   ===================================================================== */
+const SITE = {
+  phone:    '+258 84 905 0766',
+  whatsapp: '+258 84 905 0766',
+  email:    '',                         // e.g. 'reservas@hotelananga.co.mz' — leave '' to hide
+  address:  '',                         // e.g. 'Av. Julius Nyerere 123, Maputo' — leave '' to hide
+  mapQuery: '',                         // what to show on the Google map, e.g. 'Hotel Ananga, Maputo' — '' shows graph/location.jpg
+  social: {                             // paste full links; leave '' to hide an icon
+    facebook: '', instagram: '', youtube: '', whatsapp: 'https://wa.me/258849050766'
+  }
+};
+
+/* Home page slideshow photos (graph folder). Add or remove lines freely. */
+const HERO_SLIDES = [
+  { img: 'graph/hero-1.jpg', cap: 's1' },
+  { img: 'graph/hero-2.jpg', cap: 's2' },
+  { img: 'graph/hero-3.jpg', cap: 's3' },
+  { img: 'graph/hero-4.jpg', cap: 's4' }
+];
+const SLIDE_SECONDS = 6;
+
+/* "Watch the video": a file in the graph folder, OR a YouTube link (YouTube is used if filled in). */
+const VIDEO = { file: 'graph/hotel-tour.mp4', youtube: '' };
+
+/* Gallery photos */
+const GALLERY = ['graph/gallery-1.jpg','graph/gallery-2.jpg','graph/gallery-3.jpg','graph/gallery-4.jpg','graph/gallery-5.jpg','graph/gallery-6.jpg'];
+
+/* Rooms shown until the database answers (the database list replaces this automatically) */
+const DEFAULT_ROOMS = [
+  {slug:'standard', name:'Standard Room', name_pt:'Quarto Standard', description:'A calm, well-appointed room with a queen bed, work desk and en-suite shower.', description_pt:'Um quarto calmo e bem equipado, com cama de casal, secretária e casa de banho privativa com duche.', capacity:2, price_per_night:3500, currency:'MZN', image_path:'graph/room-standard.jpg'},
+  {slug:'deluxe',   name:'Deluxe Room',   name_pt:'Quarto Deluxe',   description:'More space and natural light, with a king bed, seating area and garden view.', description_pt:'Mais espaço e luz natural, com cama king size, zona de estar e vista para o jardim.', capacity:2, price_per_night:4800, currency:'MZN', image_path:'graph/room-deluxe.jpg'},
+  {slug:'family',   name:'Family Room',   name_pt:'Quarto Familiar', description:'Two connected sleeping areas for families, with a king bed and two singles.', description_pt:'Duas áreas de dormir ligadas, ideal para famílias, com cama king size e duas camas de solteiro.', capacity:4, price_per_night:6500, currency:'MZN', image_path:'graph/room-family.jpg'},
+  {slug:'suite',    name:'Ananga Suite',  name_pt:'Suite Ananga',    description:'Our finest room: separate living area, king bed, bathtub and private balcony.', description_pt:'O nosso melhor quarto: sala de estar separada, cama king size, banheira e varanda privativa.', capacity:2, price_per_night:9500, currency:'MZN', image_path:'graph/room-suite.jpg'}
+];
+
+/* Same Supabase details as booking.html */
+const SUPABASE_URL = 'https://bjkdpzpnllrdlhncctlp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqa2RwenBubGxyZGxobmNjdGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMTQ4OTgsImV4cCI6MjEwNzg5MDg5OH0.cifuHulxDpKQanyDBABAySZKfxoMVUJhObaGjAkD0cg';
+
+/* ===================================================================== */
+const I18N = {
+  en: {
+    navHome:'Home', navAbout:'About', navRooms:'Rooms', navFacilities:'Facilities', navGallery:'Gallery', navContact:'Contact', navBook:'Book a Stay',
+    navBooking:'Rooms & Booking', navStaff:'Staff', rights:'All rights reserved.', scroll:'Scroll',
+    watchVideo:'Watch the video', checkIn:'Check-in', checkOut:'Check-out', guests:'Guests', bookNow:'Book a room now',
+    nights:'{n} night(s)',
+    s1e:'Welcome to', s1:'A calm place to arrive, rest and feel at home.',
+    s2e:'Rooms & Suites', s2:'Comfortable rooms designed for restful nights.',
+    s3e:'Dining', s3:'Fresh breakfast every morning, local flavours every evening.',
+    s4e:'Moments', s4:'Warm service and genuine local hospitality.',
+    aboutEyebrow:'About Hotel Ananga', aboutTitle:'Hospitality, simply done well.',
+    aboutP1:'Hotel Ananga was created to be a welcoming place where every guest feels cared for from the moment they arrive.',
+    aboutP2:'We combine thoughtfully designed rooms, reliable service and genuine local warmth, so that your stay is easy, restful and memorable.',
+    ourRooms:'Our rooms', statRooms:'Room types', statReception:'Reception', statLang:'We speak your language',
+    tourTitle:'Take a look around', tourText:'Watch the Hotel Ananga film',
+    videoSoonT:'Our film is coming soon', videoSoon:'We are filming our rooms and spaces. Please come back soon.',
+
+    roomsPageT:'Rooms & Suites', roomsPageS:'Comfortable rooms designed for restful nights.',
+    roomsIntroT:'Choose the room that suits your stay',
+    roomsText:'All rooms include free Wi-Fi, air conditioning, an en-suite bathroom and daily housekeeping. Choose your dates above to see live availability.',
+    upTo:'Up to {n} guests', from:'from', perNight:'per night',
+    incEyebrow:'Every room', incTitle:'Included in your stay',
+    inc1:'Free Wi-Fi', inc1d:'Fast connection in every room', inc2:'Air conditioning', inc2d:'Cool and quiet, day and night',
+    inc3:'En-suite bathroom', inc3d:'Private bathroom with shower', inc4:'Daily housekeeping', inc4d:'Fresh room every day',
+    polT:'Good to know', pol1:'Check-in from 14:00', pol2:'Check-out until 11:00', pol3:'Pay on arrival, or by M-Pesa, e-Mola or bank transfer',
+
+    facPageT:'Facilities', facPageS:'Everything for a comfortable stay.',
+    facIntroT:'Designed around your comfort',
+    facText:'From your first coffee to a quiet evening, our facilities are designed around your comfort.',
+    fac1T:'Restaurant', fac1:'Fresh breakfast every morning and a relaxed dining room serving local and international dishes.',
+    fac2T:'Garden & Terrace', fac2:'A quiet outdoor space to unwind, read or enjoy the evening air.',
+    fac3T:'Meetings & Events', fac3:'A flexible room for meetings, workshops and small celebrations, with Wi-Fi and projector.',
+    quoteEyebrow:'Welcome', quote:'“A calm place to arrive, rest and feel at home.”',
+
+    galPageT:'Gallery', galPageS:'Moments at Hotel Ananga.', galIntroT:'Moments at Ananga', galText:'Click a photo to see it full screen.',
+
+    conPageT:'Contact', conPageS:'We look forward to welcoming you.',
+    conEyebrow:'Location & Contact', conTitle:'We look forward to welcoming you',
+    conAddress:'Address', conPhone:'Phone', conWhats:'WhatsApp', conEmail:'Email', conIn:'Check-in', conInV:'From 14:00',
+    conOut:'Check-out', conOutV:'Until 11:00', conPay:'Payments', conPayV:'Cash, card, M-Pesa, e-Mola, bank transfer',
+    openMap:'Open in Google Maps', callUs:'Call us', whatsUs:'WhatsApp us',
+
+    ctaEyebrow:'Reservations', ctaTitle:'Ready to plan your stay?', ctaText:'Check live availability and reserve your room in a few minutes.', ctaBtn:'Book now',
+    footHotel:'Hotel', footServices:'Services', footFollow:'Follow us', footNote:'Online booking · Pay on arrival or by mobile money'
+  },
+  pt: {
+    navHome:'Início', navAbout:'Sobre', navRooms:'Quartos', navFacilities:'Instalações', navGallery:'Galeria', navContact:'Contacto', navBook:'Reservar',
+    navBooking:'Quartos e Reservas', navStaff:'Equipa', rights:'Todos os direitos reservados.', scroll:'Descer',
+    watchVideo:'Ver o vídeo', checkIn:'Entrada', checkOut:'Saída', guests:'Hóspedes', bookNow:'Reservar agora',
+    nights:'{n} noite(s)',
+    s1e:'Bem-vindo ao', s1:'Um lugar tranquilo para chegar, descansar e sentir-se em casa.',
+    s2e:'Quartos e Suites', s2:'Quartos confortáveis, pensados para noites tranquilas.',
+    s3e:'Restaurante', s3:'Pequeno-almoço fresco todas as manhãs, sabores locais todas as noites.',
+    s4e:'Momentos', s4:'Atendimento caloroso e verdadeira hospitalidade moçambicana.',
+    aboutEyebrow:'Sobre o Hotel Ananga', aboutTitle:'Hospitalidade, simplesmente bem feita.',
+    aboutP1:'O Hotel Ananga foi criado para ser um lugar acolhedor, onde cada hóspede se sente bem tratado desde o momento em que chega.',
+    aboutP2:'Combinamos quartos cuidadosamente pensados, um serviço de confiança e a verdadeira simpatia local, para que a sua estadia seja fácil, tranquila e memorável.',
+    ourRooms:'Os nossos quartos', statRooms:'Tipos de quarto', statReception:'Receção', statLang:'Falamos a sua língua',
+    tourTitle:'Conheça o hotel', tourText:'Veja o filme do Hotel Ananga',
+    videoSoonT:'O nosso filme está a chegar', videoSoon:'Estamos a filmar os nossos quartos e espaços. Volte em breve.',
+
+    roomsPageT:'Quartos e Suites', roomsPageS:'Quartos confortáveis, pensados para noites tranquilas.',
+    roomsIntroT:'Escolha o quarto ideal para a sua estadia',
+    roomsText:'Todos os quartos incluem Wi-Fi gratuito, ar condicionado, casa de banho privativa e limpeza diária. Escolha as datas acima para ver a disponibilidade.',
+    upTo:'Até {n} hóspedes', from:'desde', perNight:'por noite',
+    incEyebrow:'Todos os quartos', incTitle:'Incluído na sua estadia',
+    inc1:'Wi-Fi gratuito', inc1d:'Ligação rápida em todos os quartos', inc2:'Ar condicionado', inc2d:'Fresco e silencioso, dia e noite',
+    inc3:'Casa de banho privativa', inc3d:'Casa de banho com duche', inc4:'Limpeza diária', inc4d:'Quarto arrumado todos os dias',
+    polT:'Informações úteis', pol1:'Check-in a partir das 14:00', pol2:'Check-out até às 11:00', pol3:'Pague na chegada, ou por M-Pesa, e-Mola ou transferência bancária',
+
+    facPageT:'Instalações', facPageS:'Tudo para uma estadia confortável.',
+    facIntroT:'Pensado para o seu conforto',
+    facText:'Do primeiro café a uma noite tranquila, as nossas instalações foram pensadas para o seu conforto.',
+    fac1T:'Restaurante', fac1:'Pequeno-almoço fresco todas as manhãs e uma sala de refeições descontraída com pratos locais e internacionais.',
+    fac2T:'Jardim e Terraço', fac2:'Um espaço exterior tranquilo para relaxar, ler ou aproveitar o fim de tarde.',
+    fac3T:'Reuniões e Eventos', fac3:'Uma sala versátil para reuniões, workshops e pequenas celebrações, com Wi-Fi e projetor.',
+    quoteEyebrow:'Bem-vindo', quote:'“Um lugar tranquilo para chegar, descansar e sentir-se em casa.”',
+
+    galPageT:'Galeria', galPageS:'Momentos no Hotel Ananga.', galIntroT:'Momentos no Ananga', galText:'Clique numa foto para a ver em ecrã inteiro.',
+
+    conPageT:'Contacto', conPageS:'Esperamos recebê-lo em breve.',
+    conEyebrow:'Localização e Contacto', conTitle:'Esperamos recebê-lo em breve',
+    conAddress:'Morada', conPhone:'Telefone', conWhats:'WhatsApp', conEmail:'Email', conIn:'Check-in', conInV:'A partir das 14:00',
+    conOut:'Check-out', conOutV:'Até às 11:00', conPay:'Pagamentos', conPayV:'Numerário, cartão, M-Pesa, e-Mola, transferência bancária',
+    openMap:'Abrir no Google Maps', callUs:'Ligar', whatsUs:'Enviar WhatsApp',
+
+    ctaEyebrow:'Reservas', ctaTitle:'Pronto para planear a sua estadia?', ctaText:'Veja a disponibilidade em tempo real e reserve o seu quarto em poucos minutos.', ctaBtn:'Reservar agora',
+    footHotel:'Hotel', footServices:'Serviços', footFollow:'Siga-nos', footNote:'Reserva online · Pague na chegada ou por dinheiro móvel'
+  }
+};
+const LANG_KEY = 'ananga-lang';
+let lang = (() => { try { return localStorage.getItem(LANG_KEY) } catch(e) { return null } })()
+        || ((navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+const t = (k, v) => { let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; if (v) for (const x in v) s = s.split('{'+x+'}').join(v[x]); return s; };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const locale = () => lang === 'pt' ? 'pt-PT' : 'en-GB';
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PAGE = document.body.dataset.page;
+
+/* Load an image in the background; call back with true/false */
+function probe(src, cb){ const i = new Image(); i.onload = () => cb(true); i.onerror = () => cb(false); i.src = src; }
+/* Use a photo as a background, or keep the tinted fallback if it is not uploaded yet */
+function bgPhoto(el){ if (!el) return; probe(el.dataset.src, ok => { if (ok) { el.style.backgroundImage = `url("${el.dataset.src}")`; el.classList.remove('fallback'); } else el.classList.add('fallback'); }); }
+
+/* ---------------- Header: transparent → solid on scroll ---------------- */
+const header = $('siteHeader');
+let revealTick = 0;
+function revealPassed(){
+  if (revealTick) return;
+  revealTick = requestAnimationFrame(() => {
+    revealTick = 0;
+    document.querySelectorAll('.reveal:not(.in), .reveal-img:not(.in)').forEach(el => {
+      if (el.getBoundingClientRect().top < innerHeight * 0.92) el.classList.add('in');
+    });
+  });
+}
+function onScroll(){ header.classList.toggle('solid', window.scrollY > 60); parallax(); revealPassed(); }
+window.addEventListener('scroll', onScroll, { passive:true });
+window.addEventListener('resize', () => { if ($('bbForm')) paintDates(); });
+
+const menuBtn = $('menuBtn'), mainNav = $('mainNav');
+const shade = document.createElement('div'); shade.className = 'menu-shade'; document.body.appendChild(shade);
+const MENU_ICON = menuBtn.innerHTML, CLOSE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function setMenu(open){
+  mainNav.classList.toggle('open', open); header.classList.toggle('menu-open', open); shade.classList.toggle('on', open);
+  menuBtn.setAttribute('aria-expanded', open); menuBtn.innerHTML = open ? CLOSE_ICON : MENU_ICON;
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+menuBtn.addEventListener('click', () => setMenu(!mainNav.classList.contains('open')));
+shade.addEventListener('click', () => setMenu(false));
+mainNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+
+/* ---------------- Home: hero slideshow (crossfade + slow zoom) ---------------- */
+const TINTS = [['#2a5a4f','#0f2a25'],['#5a4a2f','#1d1810'],['#2f4a5a','#101d24'],['#4f3a2a','#1a120d']];
+let cur = 0, timer = null, paused = false;
+function buildSlides(){
+  $('slides').innerHTML = HERO_SLIDES.map((s, i) =>
+    `<div class="slide${i===0?' on':''}"><div class="img fallback" style="--c1:${TINTS[i%4][0]};--c2:${TINTS[i%4][1]}" data-src="${esc(s.img)}"></div></div>`).join('');
+  $('slides').querySelectorAll('.img').forEach(el => probe(el.dataset.src, ok => {
+    if (ok) { el.style.backgroundImage = `url("${el.dataset.src}")`; el.classList.remove('fallback'); }
+  }));
+  $('dots').innerHTML = HERO_SLIDES.map((_, i) => `<button type="button" aria-label="${i+1}" class="${i===0?'on':''}"></button>`).join('');
+  $('dots').style.setProperty('--dur', SLIDE_SECONDS + 's');
+  $('dots').querySelectorAll('button').forEach((b, i) => b.onclick = () => go(i, true));
+}
+function setCaption(animate){
+  if (!$('heroCap')) return;
+  const s = HERO_SLIDES[cur], cap = $('heroCap');
+  const apply = () => { $('capEyebrow').textContent = t(s.cap + 'e'); $('capText').textContent = t(s.cap); cap.classList.remove('swap'); };
+  if (animate && !REDUCED) { cap.classList.add('swap'); setTimeout(apply, 450); } else apply();
+}
+function go(i, user){
+  const slides = $('slides').children, dots = $('dots').children;
+  if (!slides.length) return;
+  slides[cur].classList.remove('on'); dots[cur].classList.remove('on');
+  cur = (i + slides.length) % slides.length;
+  const img = slides[cur].querySelector('.img'); img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';
+  slides[cur].classList.add('on'); dots[cur].classList.add('on');
+  setCaption(true);
+  if (user) restart();
+}
+function restart(){ clearInterval(timer); if (!REDUCED && HERO_SLIDES.length > 1) timer = setInterval(() => { if (!paused && !document.hidden) go(cur + 1); }, SLIDE_SECONDS * 1000); }
+function initHero(){
+  const hero = $('hero'); if (!hero) return;
+  buildSlides();
+  $('prevSlide').onclick = () => go(cur - 1, true);
+  $('nextSlide').onclick = () => go(cur + 1, true);
+  hero.addEventListener('mouseenter', () => { paused = true; hero.classList.add('paused'); });
+  hero.addEventListener('mouseleave', () => { paused = false; hero.classList.remove('paused'); });
+  let tx = null;
+  hero.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive:true });
+  hero.addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1), true); tx = null; });
+  restart();
+}
+
+/* ---------------- Booking bar (home + rooms page) ---------------- */
+const localISO = d => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return localISO(d); };
+const TODAY = localISO(new Date());
+let guests = 2;
+function paintDates(){
+  if (!$('bbForm')) return;
+  for (const [inp, d, mw] of [['bbIn','inD','inMW'], ['bbOut','outD','outMW']]) {
+    const v = $(inp).value; if (!v) continue;
+    const dt = new Date(v + 'T12:00:00'), narrow = innerWidth < 700;
+    $(d).textContent = String(dt.getDate()).padStart(2, '0');
+    $(mw).innerHTML = esc(dt.toLocaleDateString(locale(), narrow ? {month:'short'} : {month:'long', year:'numeric'})) +
+      '<span>' + esc(dt.toLocaleDateString(locale(), {weekday: narrow ? 'short' : 'long'})) + '</span>';
+  }
+  const n = Math.round((new Date($('bbOut').value + 'T12:00:00') - new Date($('bbIn').value + 'T12:00:00')) / 86400000);
+  $('bbNights').textContent = n > 0 ? t('nights', {n}) : '';
+  $('gN').textContent = String(guests).padStart(2, '0');
+}
+function initBookingBar(){
+  if (!$('bbForm')) return;
+  $('bbIn').min = TODAY; $('bbIn').value = addDays(TODAY, 1);
+  $('bbOut').min = addDays(TODAY, 1); $('bbOut').value = addDays(TODAY, 2);
+  $('bbIn').addEventListener('change', () => {
+    const v = $('bbIn').value; if (!v) return;
+    $('bbOut').min = addDays(v, 1);
+    if (!$('bbOut').value || $('bbOut').value <= v) $('bbOut').value = addDays(v, 1);
+    paintDates();
+  });
+  $('bbOut').addEventListener('change', paintDates);
+  document.querySelectorAll('.bb-item input[type=date]').forEach(inp => inp.addEventListener('click', () => { try { inp.showPicker && inp.showPicker(); } catch(e) {} }));
+  $('gMinus').onclick = () => { guests = Math.max(1, guests - 1); paintDates(); };
+  $('gPlus').onclick  = () => { guests = Math.min(10, guests + 1); paintDates(); };
+  $('bbForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const q = new URLSearchParams({ in: $('bbIn').value, out: $('bbOut').value, guests: String(guests) });
+    location.href = 'booking.html?' + q.toString();
+  });
+}
+
+/* ---------------- Rooms (live from database) ---------------- */
+let roomList = DEFAULT_ROOMS;
+function renderRooms(){
+  if ($('roomCount')) $('roomCount').textContent = roomList.length;
+  const grid = $('roomsGrid'); if (!grid) return;
+  const shown = !!grid.querySelector('.room-tile.in');
+  grid.innerHTML = roomList.map((r, i) => {
+    const name = lang === 'pt' ? (r.name_pt || r.name) : r.name;
+    const img = r.image_path ? `<img src="${esc(r.image_path)}" alt="${esc(name)}" loading="lazy" onerror="this.remove()">` : '';
+    return `<a class="room-tile zoom reveal ${i % 2 ? 'd1' : ''} ${shown ? 'in' : ''}" href="booking.html">
+      <div class="ph" data-label="${esc(r.image_path || '')}">${img}</div>
+      <div class="info">
+        <div><h3>${esc(name)}<span class="go">→</span></h3><div class="meta">${t('upTo', {n: r.capacity})}</div></div>
+        <div class="price">${t('from')}<b>${esc(r.currency || 'MZN')} ${Number(r.price_per_night).toLocaleString(locale())}</b>${t('perNight')}</div>
+      </div></a>`;
+  }).join('');
+  observeReveals(grid);
+}
+async function loadRooms(){
+  if (!$('roomsGrid') && !$('roomCount')) return;
+  if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+  try {
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data, error } = await db.from('rooms')
+      .select('slug,name,name_pt,capacity,price_per_night,currency,image_path,sort_order')
+      .eq('active', true).order('sort_order');
+    if (!error && data && data.length) { roomList = data; renderRooms(); }
+  } catch(e) { /* keep default list */ }
+}
+
+/* ---------------- Parallax ---------------- */
+const pLayer = $('parallaxLayer');
+if (pLayer) probe(pLayer.dataset.src, ok => { if (ok) pLayer.style.backgroundImage = `url("${pLayer.dataset.src}")`; else pLayer.classList.add('fallback'); });
+function parallax(){
+  if (REDUCED || !pLayer) return;
+  const box = pLayer.parentElement.getBoundingClientRect();
+  if (box.bottom < 0 || box.top > innerHeight) return;
+  const p = (box.top + box.height / 2 - innerHeight / 2) / innerHeight;
+  pLayer.style.transform = `translate3d(0, ${(-p * 18).toFixed(2)}%, 0)`;
+}
+
+/* ---------------- Video modal ---------------- */
+bgPhoto($('videoPoster'));
+function ytId(u){ const m = String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
+function openModal(id){ $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id){ $(id).classList.remove('open'); document.body.style.overflow = ''; if (id === 'videoModal') $('videoBox').innerHTML = ''; }
+function showSoon(){ $('videoBox').innerHTML = `<div class="soon"><h3>${esc(t('videoSoonT'))}</h3><p>${esc(t('videoSoon'))}</p></div>`; }
+function openVideo(){
+  const box = $('videoBox'), id = ytId(VIDEO.youtube);
+  if (id) {
+    box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Hotel Ananga"></iframe>`;
+  } else if (VIDEO.file) {
+    box.innerHTML = `<video controls autoplay playsinline poster="graph/video-poster.jpg"><source src="${esc(VIDEO.file)}" type="video/mp4"></video>`;
+    const v = box.querySelector('video'), src = box.querySelector('source');
+    src.addEventListener('error', showSoon); v.addEventListener('error', showSoon);
+  } else showSoon();
+  openModal('videoModal');
+}
+document.querySelectorAll('[data-video]').forEach(el => {
+  el.addEventListener('click', openVideo);
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openVideo(); } });
+});
+
+/* ---------------- Gallery + lightbox ---------------- */
+let lbIndex = 0; const galleryOk = {};
+function renderGallery(){
+  if (!$('galleryGrid')) return;
+  $('galleryGrid').innerHTML = GALLERY.map((src, i) =>
+    `<button type="button" class="zoom reveal ${['','d1','d2','d3'][i%4]}" data-i="${i}" aria-label="Photo ${i+1}">
+       <div class="ph" data-label="${esc(src)}"><img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()"></div></button>`).join('');
+  $('galleryGrid').querySelectorAll('button').forEach(b => b.onclick = () => openLightbox(+b.dataset.i));
+  GALLERY.forEach((src, i) => probe(src, ok => galleryOk[i] = ok));
+}
+function showLb(){
+  const src = GALLERY[lbIndex];
+  $('lbStage').innerHTML = galleryOk[lbIndex] === false
+    ? `<div class="ph lb-ph" data-label="${esc(src)}"></div>` : `<img class="lb-img" src="${esc(src)}" alt="">`;
+  $('lbCount').textContent = (lbIndex + 1) + ' / ' + GALLERY.length;
+}
+function openLightbox(i){ lbIndex = i; showLb(); openModal('lightbox'); }
+if ($('lightbox')) {
+  $('lbPrev').onclick = () => { lbIndex = (lbIndex - 1 + GALLERY.length) % GALLERY.length; showLb(); };
+  $('lbNext').onclick = () => { lbIndex = (lbIndex + 1) % GALLERY.length; showLb(); };
+}
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m || e.target.hasAttribute('data-close')) closeModal(m.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => closeModal(m.id)); if (mainNav.classList.contains('open')) setMenu(false); }
+  if ($('lightbox') && $('lightbox').classList.contains('open')) { if (e.key === 'ArrowLeft') $('lbPrev').click(); if (e.key === 'ArrowRight') $('lbNext').click(); }
+});
+
+/* ---------------- Contact, map, footer ---------------- */
+const ICONS = {
+  facebook:'<path d="M14 9h3V5h-3c-2.2 0-4 1.8-4 4v2H8v4h2v8h4v-8h3l1-4h-4V9.5c0-.3.2-.5.5-.5z"/>',
+  instagram:'<path d="M12 7.3a4.7 4.7 0 100 9.4 4.7 4.7 0 000-9.4zm0 7.7a3 3 0 110-6 3 3 0 010 6zm6-7.9a1.1 1.1 0 11-2.2 0 1.1 1.1 0 012.2 0zM20.9 8c-.1-1.5-.4-2.8-1.5-3.9S17 2.6 15.5 2.5C14 2.4 10 2.4 8.5 2.5 7 2.6 5.7 2.9 4.6 4S3.1 6.5 3 8c-.1 1.5-.1 6.5 0 8 .1 1.5.4 2.8 1.5 3.9s2.4 1.4 3.9 1.5c1.5.1 6.5.1 8 0 1.5-.1 2.8-.4 3.9-1.5s1.4-2.4 1.5-3.9c.1-1.5.1-6.5 0-8z"/>',
+  youtube:'<path d="M22 8.2s-.2-1.5-.8-2.1c-.8-.8-1.6-.8-2-.9C16.4 5 12 5 12 5s-4.4 0-7.2.2c-.4.1-1.2.1-2 .9-.6.6-.8 2.1-.8 2.1S2 9.9 2 11.6v1.6c0 1.7.2 3.4.2 3.4s.2 1.5.8 2.1c.8.8 1.8.8 2.2.9 1.6.2 6.8.2 6.8.2s4.4 0 7.2-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2.1.8-2.1s.2-1.7.2-3.4v-1.6c0-1.7-.2-3.4-.2-3.4zM10 15V9l5.2 3L10 15z"/>',
+  whatsapp:'<path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.1-1.2l-.2-.2z"/>'
+};
+const tel = s => s.replace(/[^\d+]/g, '');
+const waLink = () => SITE.whatsapp ? 'https://wa.me/' + tel(SITE.whatsapp).replace('+','') : '';
+function renderContact(){
+  if ($('contactList')) {
+    const rows = [];
+    if (SITE.address) rows.push([t('conAddress'), esc(SITE.address)]);
+    if (SITE.phone) rows.push([t('conPhone'), `<a href="tel:${tel(SITE.phone)}">${esc(SITE.phone)}</a>`]);
+    if (SITE.whatsapp) rows.push([t('conWhats'), `<a href="${waLink()}" target="_blank" rel="noopener">${esc(SITE.whatsapp)}</a>`]);
+    if (SITE.email) rows.push([t('conEmail'), `<a href="mailto:${esc(SITE.email)}">${esc(SITE.email)}</a>`]);
+    rows.push([t('conIn'), t('conInV')], [t('conOut'), t('conOutV')], [t('conPay'), t('conPayV')]);
+    if (SITE.mapQuery) rows.push(['', `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SITE.mapQuery)}" target="_blank" rel="noopener">${t('openMap')} →</a>`]);
+    $('contactList').innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('');
+  }
+  if ($('contactBtns')) {
+    $('contactBtns').innerHTML = [
+      SITE.phone && `<a class="btn" href="tel:${tel(SITE.phone)}">${t('callUs')}</a>`,
+      SITE.whatsapp && `<a class="btn line" href="${waLink()}" target="_blank" rel="noopener">${t('whatsUs')}</a>`
+    ].filter(Boolean).join('');
+  }
+  $('footContact').innerHTML = [SITE.address && esc(SITE.address), SITE.phone && `<a href="tel:${tel(SITE.phone)}">${esc(SITE.phone)}</a>`,
+    SITE.email && `<a href="mailto:${esc(SITE.email)}">${esc(SITE.email)}</a>`].filter(Boolean).join('');
+}
+function renderMap(){
+  if (!$('mapBox')) return;
+  $('mapBox').innerHTML = SITE.mapQuery
+    ? `<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map" src="https://www.google.com/maps?q=${encodeURIComponent(SITE.mapQuery)}&output=embed"></iframe>`
+    : `<div class="ph" data-label="graph/location.jpg"><img src="graph/location.jpg" alt="" onerror="this.remove()"></div>`;
+}
+function renderSocial(){
+  $('socialLinks').innerHTML = Object.entries(SITE.social).filter(([, u]) => u).map(([k, u]) =>
+    `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}"><svg viewBox="0 0 24 24">${ICONS[k] || ''}</svg></a>`).join('');
+}
+
+/* ---------------- Reveal on scroll ---------------- */
+const io = 'IntersectionObserver' in window && !REDUCED
+  ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .14, rootMargin: '0px 0px -40px 0px' })
+  : null;
+function observeReveals(root){
+  (root || document).querySelectorAll('.reveal:not(.in), .reveal-img:not(.in)').forEach(el => io ? io.observe(el) : el.classList.add('in'));
+}
+
+/* ---------------- Language ---------------- */
+function applyLang(){
+  document.documentElement.lang = lang;
+  const titleKey = document.body.dataset.title;
+  document.title = (titleKey ? t(titleKey) + ' — ' : '') + 'Hotel Ananga';
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-lang-switch]').forEach(box => {
+    box.innerHTML = ['en','pt'].map(l => `<button type="button" class="${l===lang?'on':''}" data-l="${l}" aria-label="${l==='en'?'English':'Português'}">${l.toUpperCase()}</button>`).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem(LANG_KEY, lang) } catch(e) {} applyLang(); });
+  });
+  setCaption(false); paintDates(); renderRooms(); renderContact();
+  if ($('videoModal').classList.contains('open') && $('videoBox').querySelector('.soon')) showSoon();
+}
+
+/* ---------------- Start ---------------- */
+$('year').textContent = new Date().getFullYear();
+document.querySelectorAll('.page-hero .img').forEach(bgPhoto);
+initHero(); initBookingBar(); renderGallery(); renderMap(); renderSocial();
+applyLang(); observeReveals(); onScroll(); loadRooms();
+</script>
+</body>
+</html>
